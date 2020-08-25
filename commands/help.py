@@ -87,13 +87,6 @@ class Commands(commands.Cog):
             help_embed.set_footer(text=embed_footer[0])
             await ctx.send(embed=help_embed)
         elif str(ctx.channel) in ecogame_channels:
-            #                "\n__Failrate:__ 25%\n__Cooldown:__ 2 uur\n\n`/blackjack [Bet]`\n__Min Bet:__ €15"
-            #                "\n__Max Bet:__ €750\n__Cooldown:__ 20 Games per uur\n\n`/roulette [Bet] [Space]`"
-            #                "\n__Min Bet:__ €50\n__Max Bet:__ €1000\n__Cooldown:__ 20 Games per uur\n\n"
-            #                "`/slot-machine [Bet]`\n__Min Bet:__ €10\n__Max Bet:__ €500"
-            #                "\n__Cooldown:__ 20 Games per uur\n\n`/cock-fight [Bet]`\n__Min Bet:__ €5"
-            #                "\n__Max Bet:__ €200\n__Cooldown:__ 20 Games per uur\n\n`/russian-roulette [Bet]`"
-            #                "\n__Min Bet:__ €50\n__Max Bet:__ €800\n__Cooldown:__ 20 Games per uur\n\n```fix"
             await ctx.send(
                 f"```fix\nAlle Commands```"
                 f"\n`!work`"
