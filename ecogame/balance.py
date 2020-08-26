@@ -15,26 +15,6 @@ database = settings['database']
 
 read_settings.close()
 
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
-
-maxergdb_cursor = db_maxerg.cursor()
-
-maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-embed_color_tuple = maxergdb_cursor.fetchone()
-embed_color = int(embed_color_tuple[0], 16)
-
-maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-embed_footer = maxergdb_cursor.fetchone()
-
-maxergdb_cursor.execute("SELECT currency FROM maxerg_config")
-currency_tuple = maxergdb_cursor.fetchone()
-currency = currency_tuple[0]
-
 
 class EcoBalance(commands.Cog):
 
@@ -45,7 +25,20 @@ class EcoBalance(commands.Cog):
     async def balance(self, ctx, *, member: discord.Member = None):
         ecogame_channels = ["💰│economy-game", "🔒│bots", "🔒│staff"]
         if str(ctx.channel) in ecogame_channels:
-            db_maxerg.commit()
+            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+            maxergdb_cursor = db_maxerg.cursor()
+
+            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
+            embed_color_tuple = maxergdb_cursor.fetchone()
+            embed_color = int(embed_color_tuple[0], 16)
+
+            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
+            embed_footer = maxergdb_cursor.fetchone()
+
+            maxergdb_cursor.execute("SELECT currency FROM maxerg_config")
+            currency_tuple = maxergdb_cursor.fetchone()
+            currency = currency_tuple[0]
+
             if member is None:
                 member = ctx.author
 
@@ -71,9 +64,10 @@ class EcoBalance(commands.Cog):
             em.set_author(name=f"{member}", icon_url=f"{member.avatar_url}")
             em.set_footer(text=embed_footer[0])
             await ctx.send(embed=em)
+            db_maxerg.close()
         else:
             await ctx.channel.purge(limit=1)
-            del_msg = await ctx.send(f"Je moet in <#747575812605214900> zitten om deze command uit te voeren.")
+            del_msg = await ctx.send(f"Je moet in <#708055327958106164> zitten om deze command uit te voeren.")
             await asyncio.sleep(3)
             await del_msg.delete()
 
