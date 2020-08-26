@@ -18,6 +18,12 @@ bot_naam = "MaxerG"
 @client.command()
 async def load(ctx, types, extension):
     if ctx.author.id == 643072638075273248:
+        if extension == "*":
+            for filenames in os.listdir(f'./{types}'):
+                if filenames.endswith('.py'):
+                    print(f"Load {extension}, door {ctx.author}")
+                    client.load_extension(f'{types}.{filenames[:-3]}')
+            await ctx.send(f"Loaded all extensions in {types}, succes!")
         client.load_extension(f'{types}.{extension}')
         print(f"Load {extension}, door {ctx.author}")
         await ctx.send(f"Load {extension}, succes!")
@@ -35,6 +41,12 @@ async def reload(ctx, types, extension):
 @client.command()
 async def unload(ctx, types, extension):
     if ctx.author.id == 643072638075273248:
+        if extension == "*":
+            for filenames in os.listdir(f'./{types}'):
+                if filenames.endswith('.py'):
+                    print(f"Unload {extension}, door {ctx.author}")
+                    client.unload_extension(f'{types}.{filenames[:-3]}')
+            await ctx.send(f"Unloaded all extensions in {types}, succes!")
         client.unload_extension(f'{types}.{extension}')
         print(f"Unload {extension}, door {ctx.author}")
         await ctx.send(f"Unload {extension}, succes!")
