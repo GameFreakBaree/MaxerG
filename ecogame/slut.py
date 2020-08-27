@@ -17,26 +17,6 @@ database = settings['database']
 
 read_settings.close()
 
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
-
-maxergdb_cursor = db_maxerg.cursor()
-
-maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-embed_color_tuple = maxergdb_cursor.fetchone()
-embed_color = int(embed_color_tuple[0], 16)
-
-maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-embed_footer = maxergdb_cursor.fetchone()
-
-maxergdb_cursor.execute("SELECT currency FROM maxerg_config")
-currency_tuple = maxergdb_cursor.fetchone()
-currency = currency_tuple[0]
-
 
 class EcoSlut(commands.Cog):
 
@@ -48,20 +28,22 @@ class EcoSlut(commands.Cog):
     async def slut(self, ctx):
         minigame_channels = ["💰│economy-game", "🔒│bots"]
         if str(ctx.channel) in minigame_channels:
-            db_maxerg.commit()
+            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+            maxergdb_cursor = db_maxerg.cursor()
+
+            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
+            embed_footer = maxergdb_cursor.fetchone()
+
+            maxergdb_cursor.execute("SELECT currency FROM maxerg_config")
+            currency_tuple = maxergdb_cursor.fetchone()
+            currency = currency_tuple[0]
 
             failrate = randint(0, 3)
             if failrate == 1:
                 loon = randint(20, 50)
                 loon_cast = int(loon)
 
-                maxergdb_cursor.execute(f"SELECT cash FROM maxerg_ecogame WHERE user_id = {ctx.author.id}")
-                cash = maxergdb_cursor.fetchone()
-                if cash is None:
-                    cash = (0,)
-                cash_new = cash[0] - loon_cast
-
-                ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = {cash_new} WHERE user_id = {ctx.author.id}"
+                ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = cash - {loon_cast} WHERE user_id = {ctx.author.id}"
                 maxergdb_cursor.execute(ecogame_sql_cash)
                 db_maxerg.commit()
 
@@ -77,13 +59,7 @@ class EcoSlut(commands.Cog):
                 loon = randint(30, 60)
                 loon_cast = int(loon)
 
-                maxergdb_cursor.execute(f"SELECT cash FROM maxerg_ecogame WHERE user_id = {ctx.author.id}")
-                cash = maxergdb_cursor.fetchone()
-                if cash is None:
-                    cash = (0,)
-                cash_new = cash[0] + loon_cast
-
-                ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = {cash_new} WHERE user_id = {ctx.author.id}"
+                ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = cash + {loon_cast} WHERE user_id = {ctx.author.id}"
                 maxergdb_cursor.execute(ecogame_sql_cash)
                 db_maxerg.commit()
 
@@ -103,6 +79,8 @@ class EcoSlut(commands.Cog):
             em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
             em.set_footer(text=embed_footer[0])
             await ctx.send(embed=em)
+
+            db_maxerg.close()
         else:
             await ctx.channel.purge(limit=1)
             del_msg = await ctx.send(f"Je moet in <#747575812605214900> zitten om deze command uit te voeren.")
@@ -112,6 +90,16 @@ class EcoSlut(commands.Cog):
     @slut.error
     async def slut_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
+            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+            maxergdb_cursor = db_maxerg.cursor()
+
+            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
+            embed_footer = maxergdb_cursor.fetchone()
+
+            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
+            embed_color_tuple = maxergdb_cursor.fetchone()
+            embed_color = int(embed_color_tuple[0], 16)
+
             cooldown_limit = error.retry_after
             if cooldown_limit >= 86400:
                 conversion = time.strftime("%#dd %#Hu %#Mm %#Ss", time.gmtime(error.retry_after))
@@ -121,13 +109,15 @@ class EcoSlut(commands.Cog):
                 conversion = time.strftime("%#Mm %#Ss", time.gmtime(error.retry_after))
 
             em = discord.Embed(
-                description=f"X Je moet {conversion} wachten om deze command opnieuw te gebruiken.",
+                description=f"<:error:725030739531268187> Je moet {conversion} wachten om deze command opnieuw te gebruiken.",
                 color=embed_color,
                 timestamp=datetime.datetime.utcnow()
             )
             em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
             em.set_footer(text=embed_footer[0])
             await ctx.send(embed=em)
+
+            db_maxerg.close()
         else:
             raise error
 
