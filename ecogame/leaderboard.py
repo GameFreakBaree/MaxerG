@@ -15,13 +15,6 @@ database = settings['database']
 
 read_settings.close()
 
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
-
 
 class EcoLeaderboard(commands.Cog):
 
@@ -32,7 +25,7 @@ class EcoLeaderboard(commands.Cog):
     async def leaderboard(self, ctx, page=1):
         command_channels = ["💰│economy-game", "🔒│bots", "🔒│staff"]
         if str(ctx.channel) in command_channels:
-            db_maxerg.commit()
+            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
             maxergdb_cursor = db_maxerg.cursor()
 
             maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
@@ -90,9 +83,11 @@ class EcoLeaderboard(commands.Cog):
             embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
             embed.set_footer(text=embed_footer[0])
             await ctx.send(embed=embed)
+
+            db_maxerg.close()
         else:
             await ctx.channel.purge(limit=1)
-            del_msg = await ctx.send(f"Je moet in <#747575812605214900> zitten om deze command uit te voeren.")
+            del_msg = await ctx.send(f"Je moet in <#708055327958106164> zitten om deze command uit te voeren.")
             time.sleep(3)
             await del_msg.delete()
 
