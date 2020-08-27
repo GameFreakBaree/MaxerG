@@ -17,26 +17,6 @@ database = settings['database']
 
 read_settings.close()
 
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
-
-maxergdb_cursor = db_maxerg.cursor()
-
-maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-embed_color_tuple = maxergdb_cursor.fetchone()
-embed_color = int(embed_color_tuple[0], 16)
-
-maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-embed_footer = maxergdb_cursor.fetchone()
-
-maxergdb_cursor.execute("SELECT currency FROM maxerg_config")
-currency_tuple = maxergdb_cursor.fetchone()
-currency = currency_tuple[0]
-
 
 class EcoRob(commands.Cog):
 
@@ -48,7 +28,15 @@ class EcoRob(commands.Cog):
     async def rob(self, ctx, *, member: discord.Member = None):
         minigame_channels = ["💰│economy-game", "🔒│bots"]
         if str(ctx.channel) in minigame_channels:
-            db_maxerg.commit()
+            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+            maxergdb_cursor = db_maxerg.cursor()
+
+            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
+            embed_footer = maxergdb_cursor.fetchone()
+
+            maxergdb_cursor.execute("SELECT currency FROM maxerg_config")
+            currency_tuple = maxergdb_cursor.fetchone()
+            currency = currency_tuple[0]
 
             if member is not None:
                 if member != ctx.author:
@@ -69,7 +57,7 @@ class EcoRob(commands.Cog):
 
                     if victem_geld <= 0:
                         em = discord.Embed(
-                            description=f"X Deze gebruiker heeft geen geld om te stelen.",
+                            description=f"<:error:725030739531268187> Deze gebruiker heeft geen geld om te stelen.",
                             color=0xFF0000,
                             timestamp=datetime.datetime.utcnow()
                         )
@@ -87,7 +75,7 @@ class EcoRob(commands.Cog):
                                 cash = (0,)
 
                             loon_cast = cash[0] + random_loon
-                            cash_new = cash[0] - loon_cast
+                            cash_new = 0 - random_loon
 
                             ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = {cash_new} WHERE user_id = {ctx.author.id}"
                             maxergdb_cursor.execute(ecogame_sql_cash)
@@ -105,13 +93,7 @@ class EcoRob(commands.Cog):
 
                             loon_cast = loon[0]
 
-                            maxergdb_cursor.execute(f"SELECT cash FROM maxerg_ecogame WHERE user_id = {ctx.author.id}")
-                            cash = maxergdb_cursor.fetchone()
-                            if cash is None:
-                                cash = (0,)
-                            cash_new = cash[0] + loon_cast
-
-                            ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = {cash_new} WHERE user_id = {ctx.author.id}"
+                            ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = cash + {loon_cast} WHERE user_id = {ctx.author.id}"
                             maxergdb_cursor.execute(ecogame_sql_cash)
                             db_maxerg.commit()
 
@@ -138,15 +120,27 @@ class EcoRob(commands.Cog):
                     await ctx.send("Je kan geen geld van je eigen stelen.")
             else:
                 await ctx.send("Voer een geldige gebruiker in.")
+
+            db_maxerg.close()
         else:
             await ctx.channel.purge(limit=1)
-            del_msg = await ctx.send(f"Je moet in <#747575812605214900> zitten om deze command uit te voeren.")
+            del_msg = await ctx.send(f"Je moet in <#708055327958106164> zitten om deze command uit te voeren.")
             time.sleep(3)
             await del_msg.delete()
 
     @rob.error
     async def rob_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
+            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+            maxergdb_cursor = db_maxerg.cursor()
+
+            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
+            embed_color_tuple = maxergdb_cursor.fetchone()
+            embed_color = int(embed_color_tuple[0], 16)
+
+            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
+            embed_footer = maxergdb_cursor.fetchone()
+
             cooldown_limit = error.retry_after
             if cooldown_limit >= 86400:
                 conversion = time.strftime("%#dd %#Hu %#Mm %#Ss", time.gmtime(error.retry_after))
@@ -163,6 +157,8 @@ class EcoRob(commands.Cog):
             em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
             em.set_footer(text=embed_footer[0])
             await ctx.send(embed=em)
+
+            db_maxerg.close()
         else:
             raise error
 
