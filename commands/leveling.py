@@ -23,6 +23,15 @@ db_maxerg = mysql.connector.connect(
     passwd=password
 )
 
+maxergdb_cursor = db_maxerg.cursor()
+
+maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
+embed_color_tuple = maxergdb_cursor.fetchone()
+embed_color = int(embed_color_tuple[0], 16)
+
+maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
+embed_footer = maxergdb_cursor.fetchone()
+
 
 class LevelingSystem(commands.Cog):
 
@@ -39,20 +48,12 @@ class LevelingSystem(commands.Cog):
                 return
             else:
                 db_maxerg.commit()
-                maxergdb_cursor = db_maxerg.cursor()
 
-                maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-                embed_color_tuple = maxergdb_cursor.fetchone()
-                embed_color = int(embed_color_tuple[0], 16)
-
-                maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-                embed_footer = maxergdb_cursor.fetchone()
-
-                dead_channels = ["📈│memes"]
-                if str(message.channel) in dead_channels:
-                    random_exp = randint(6, 14)
-                else:
-                    random_exp = randint(3, 7)
+                # dead_channels = ["📈│memes"]
+                # if str(message.channel) in dead_channels:
+                #     random_exp = randint(6, 14)
+                # else:
+                random_exp = randint(6, 14)
 
                 maxergdb_cursor.execute(f"SELECT user_id FROM maxerg_levels WHERE user_id = {message.author.id}")
                 user_id = maxergdb_cursor.fetchone()
@@ -86,15 +87,11 @@ class LevelingSystem(commands.Cog):
                     exp = maxergdb_cursor.fetchone()
                     experience = exp[0] + random_exp
 
-                    maxergdb_cursor.execute(f"SELECT berichten FROM maxerg_levels WHERE user_id = {message.author.id}")
-                    messages = maxergdb_cursor.fetchone()
-                    berichten_new = messages[0] + 1
-
-                    level_sql_exp = f"UPDATE maxerg_levels SET experience = {experience} WHERE user_id = {message.author.id}"
+                    level_sql_exp = f"UPDATE maxerg_levels SET experience = experience + {random_exp} WHERE user_id = {message.author.id}"
                     maxergdb_cursor.execute(level_sql_exp)
                     db_maxerg.commit()
 
-                    level_sql_berichten = f"UPDATE maxerg_levels SET berichten = {berichten_new} WHERE user_id = {message.author.id}"
+                    level_sql_berichten = f"UPDATE maxerg_levels SET berichten = berichten + 1 WHERE user_id = {message.author.id}"
                     maxergdb_cursor.execute(level_sql_berichten)
                     db_maxerg.commit()
 
@@ -134,7 +131,7 @@ class LevelingSystem(commands.Cog):
                     maxergdb_cursor.execute(level_sql_lvl)
                     db_maxerg.commit()
 
-                random_money = randint(1, 4)
+                random_money = randint(2, 8)
 
                 maxergdb_cursor.execute(f"SELECT user_id FROM maxerg_ecogame WHERE user_id = {message.author.id}")
                 user_id_eco = maxergdb_cursor.fetchone()
@@ -157,11 +154,7 @@ class LevelingSystem(commands.Cog):
                     maxergdb_cursor.execute(instert_new_user_id_eco, ecogame_record)
                     db_maxerg.commit()
                 else:
-                    maxergdb_cursor.execute(f"SELECT cash FROM maxerg_ecogame WHERE user_id = {message.author.id}")
-                    cash = maxergdb_cursor.fetchone()
-                    cash_new = cash[0] + random_money
-
-                    ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = {cash_new} WHERE user_id = {message.author.id}"
+                    ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = cash + {random_money} WHERE user_id = {message.author.id}"
                     maxergdb_cursor.execute(ecogame_sql_cash)
                     db_maxerg.commit()
 
@@ -173,14 +166,6 @@ class LevelingSystem(commands.Cog):
         command_channels = ["🤖│commands", "🔒│bots"]
         if str(ctx.channel) in command_channels:
             db_maxerg.commit()
-            maxergdb_cursor = db_maxerg.cursor()
-
-            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-            embed_color_tuple = maxergdb_cursor.fetchone()
-            embed_color = int(embed_color_tuple[0], 16)
-
-            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-            embed_footer = maxergdb_cursor.fetchone()
 
             maxergdb_cursor.execute(f"SELECT berichten FROM maxerg_levels WHERE user_id = {member.id}")
             berichten = maxergdb_cursor.fetchone()
@@ -205,14 +190,6 @@ class LevelingSystem(commands.Cog):
         command_channels = ["🤖│commands", "🔒│bots", "🔒│staff"]
         if str(ctx.channel) in command_channels:
             db_maxerg.commit()
-            maxergdb_cursor = db_maxerg.cursor()
-
-            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-            embed_color_tuple = maxergdb_cursor.fetchone()
-            embed_color = int(embed_color_tuple[0], 16)
-
-            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-            embed_footer = maxergdb_cursor.fetchone()
 
             pre_offset = page - 1
             offset = pre_offset * 10
