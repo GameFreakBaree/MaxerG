@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from discord.ext import commands
 import json
@@ -35,22 +36,43 @@ class EcoResetMoney(commands.Cog):
             maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
             embed_footer = maxergdb_cursor.fetchone()
 
-            ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = 0 WHERE user_id = {ctx.author.id}"
-            maxergdb_cursor.execute(ecogame_sql_cash)
-            db_maxerg.commit()
-
-            ecogame_sql_bank = f"UPDATE maxerg_ecogame SET bank = 0 WHERE user_id = {ctx.author.id}"
-            maxergdb_cursor.execute(ecogame_sql_bank)
-            db_maxerg.commit()
-
             em = discord.Embed(
-                description=f"Je hebt al je geld gereset!",
+                description=f"Wil je al je geld resetten? Type ` Ja ` als je al je geld wilt resetten.",
                 color=embed_color,
                 timestamp=datetime.datetime.utcnow()
             )
             em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
             em.set_footer(text=embed_footer[0])
-            await ctx.send(embed=em)
+            embed = await ctx.send(embed=em)
+
+            def check(message):
+                return message.author == ctx.author and message.channel == ctx.channel and message.content.lower() == "ja"
+
+            try:
+                await self.client.wait_for('message', check=check, timeout=60)
+
+                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = 0 WHERE user_id = {ctx.author.id}")
+                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET bank = 0 WHERE user_id = {ctx.author.id}")
+                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = 0 WHERE user_id = {ctx.author.id}")
+                db_maxerg.commit()
+
+                em = discord.Embed(
+                    description=f"Je hebt al je geld gereset!",
+                    color=embed_color,
+                    timestamp=datetime.datetime.utcnow()
+                )
+                em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
+                em.set_footer(text=embed_footer[0])
+                await embed.edit(embed=em)
+            except asyncio.TimeoutError:
+                em = discord.Embed(
+                    description="Geen reactie gekregen. Probeer het opnieuw.",
+                    color=embed_color,
+                    timestamp=datetime.datetime.utcnow()
+                )
+                em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
+                em.set_footer(text=embed_footer[0])
+                await embed.edit(embed=em)
 
             db_maxerg.close()
         else:
