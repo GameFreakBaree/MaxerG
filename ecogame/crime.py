@@ -44,8 +44,8 @@ class EcoCrime(commands.Cog):
                 loon = randint(120, 180)
                 loon_cast = int(loon)
 
-                ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = cash - {loon_cast} WHERE user_id = {ctx.author.id}"
-                maxergdb_cursor.execute(ecogame_sql_cash)
+                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = cash - {loon_cast} WHERE user_id = {ctx.author.id}")
+                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto - {loon_cast} WHERE user_id = {ctx.author.id}")
                 db_maxerg.commit()
 
                 mogelijke_antwoorden = [
@@ -56,8 +56,8 @@ class EcoCrime(commands.Cog):
                 loon = randint(250, 500)
                 loon_cast = int(loon)
 
-                ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = cash + {loon_cast} WHERE user_id = {ctx.author.id}"
-                maxergdb_cursor.execute(ecogame_sql_cash)
+                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = cash + {loon_cast} WHERE user_id = {ctx.author.id}")
+                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto + {loon_cast} WHERE user_id = {ctx.author.id}")
                 db_maxerg.commit()
 
                 mogelijke_antwoorden = [
