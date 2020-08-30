@@ -14,15 +14,6 @@ database = settings['database']
 
 read_settings.close()
 
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
-
-maxergdb_cursor = db_maxerg.cursor()
-
 
 class HigherLower(commands.Cog):
 
@@ -34,7 +25,8 @@ class HigherLower(commands.Cog):
         if message.author.bot is False:
             hl_channels = ["✨│hoger-lager"]
             if str(message.channel) in hl_channels:
-                db_maxerg.commit()
+                db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+                maxergdb_cursor = db_maxerg.cursor()
 
                 maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
                 embed_color_tuple = maxergdb_cursor.fetchone()
@@ -57,8 +49,7 @@ class HigherLower(commands.Cog):
                     try:
                         message_inhoud = int(message.content)
 
-                        update_sql = f"UPDATE maxerg_higherlower SET last_user_id = {message.author.id}"
-                        maxergdb_cursor.execute(update_sql)
+                        maxergdb_cursor.execute(f"UPDATE maxerg_higherlower SET last_user_id = {message.author.id}")
                         db_maxerg.commit()
 
                         higher_emote = "🔼"
@@ -83,25 +74,17 @@ class HigherLower(commands.Cog):
                             embed.set_footer(text=embed_footer[0])
                             await message.channel.send(embed=embed)
 
-                            random_number = randint(1, 1000)
-                            update_sql = f"UPDATE maxerg_higherlower SET random_number = {random_number}"
-                            maxergdb_cursor.execute(update_sql)
-                            db_maxerg.commit()
+                            random_number = randint(1, 100000)
 
-                            maxergdb_cursor.execute(
-                                f"SELECT cash FROM maxerg_ecogame WHERE user_id = {message.author.id}")
-                            cash = maxergdb_cursor.fetchone()
-                            if cash is None:
-                                cash = (0,)
-                            cash_new = cash[0] + random_money
-
-                            ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = {cash_new} WHERE user_id = {message.author.id}"
-                            maxergdb_cursor.execute(ecogame_sql_cash)
+                            maxergdb_cursor.execute(f"UPDATE maxerg_higherlower SET random_number = {random_number}")
+                            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = cash + {random_money} WHERE user_id = {message.author.id}")
+                            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto + {random_money} WHERE user_id = {message.author.id}")
                             db_maxerg.commit()
                         else:
                             print("error in hoger lager")
                     except ValueError:
                         await message.channel.purge(limit=1)
+                db_maxerg.close()
 
 
 def setup(client):
