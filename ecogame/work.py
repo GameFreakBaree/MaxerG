@@ -41,8 +41,8 @@ class EcoWork(commands.Cog):
             loon = randint(6, 25)
             loon_cast = int(loon)
 
-            ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = cash + {loon_cast} WHERE user_id = {ctx.author.id}"
-            maxergdb_cursor.execute(ecogame_sql_cash)
+            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = cash + {loon_cast} WHERE user_id = {ctx.author.id}")
+            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto + {loon_cast} WHERE user_id = {ctx.author.id}")
             db_maxerg.commit()
 
             mogelijke_antwoorden = [f'Je kreeg {currency}{loon_cast} om hamburgers te maken in de McDonalds.',
@@ -53,7 +53,8 @@ class EcoWork(commands.Cog):
                                     f'Je speelde mee in een Minecraft skywars potje en je won {currency}{loon_cast}.',
                                     f'Door al je items op Hypixel Skyblock te verkopen verdiende je {currency}{loon_cast}.',
                                     f'Je werkte als een schoonmaker en je kreeg {currency}{loon_cast}.',
-                                    f'Je behaalde goede punten en kreeg {currency}{loon_cast} van je ouders.']
+                                    f'Je behaalde goede punten en kreeg {currency}{loon_cast} van je ouders.',
+                                    f'Je bent op Fiverr begonnen en verdiende {currency}{loon_cast} op de eerste dag.']
             antwoord = random.choice(mogelijke_antwoorden)
 
             em = discord.Embed(
