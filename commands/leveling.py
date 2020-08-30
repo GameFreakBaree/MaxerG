@@ -87,12 +87,8 @@ class LevelingSystem(commands.Cog):
                     exp = maxergdb_cursor.fetchone()
                     experience = exp[0] + random_exp
 
-                    level_sql_exp = f"UPDATE maxerg_levels SET experience = experience + {random_exp} WHERE user_id = {message.author.id}"
-                    maxergdb_cursor.execute(level_sql_exp)
-                    db_maxerg.commit()
-
-                    level_sql_berichten = f"UPDATE maxerg_levels SET berichten = berichten + 1 WHERE user_id = {message.author.id}"
-                    maxergdb_cursor.execute(level_sql_berichten)
+                    maxergdb_cursor.execute(f"UPDATE maxerg_levels SET experience = experience + {random_exp} WHERE user_id = {message.author.id}")
+                    maxergdb_cursor.execute(f"UPDATE maxerg_levels SET berichten = berichten + 1 WHERE user_id = {message.author.id}")
                     db_maxerg.commit()
 
                 maxergdb_cursor.execute(f"SELECT level FROM maxerg_levels WHERE user_id = {message.author.id}")
@@ -143,19 +139,22 @@ class LevelingSystem(commands.Cog):
                     if f'{message.author.id}' in user_eco_data:
                         cash = user_eco_data[f'{message.author.id}']['cash']
                         bank = user_eco_data[f'{message.author.id}']['bank']
+                        netto = cash + bank
                     else:
                         cash = 0
                         bank = 0
+                        netto = 0
 
                     cash_new_random = cash + random_money
+                    netto_new_random = netto + random_money
 
-                    instert_new_user_id_eco = "INSERT INTO maxerg_ecogame (user_id, cash, bank) VALUES (%s, %s, %s)"
-                    ecogame_record = (message.author.id, cash_new_random, bank)
+                    instert_new_user_id_eco = "INSERT INTO maxerg_ecogame (user_id, cash, bank, netto) VALUES (%s, %s, %s, %s)"
+                    ecogame_record = (message.author.id, cash_new_random, bank, netto_new_random)
                     maxergdb_cursor.execute(instert_new_user_id_eco, ecogame_record)
                     db_maxerg.commit()
                 else:
-                    ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = cash + {random_money} WHERE user_id = {message.author.id}"
-                    maxergdb_cursor.execute(ecogame_sql_cash)
+                    maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = cash + {random_money} WHERE user_id = {message.author.id}")
+                    maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto + {random_money} WHERE user_id = {message.author.id}")
                     db_maxerg.commit()
 
     @commands.command(aliases=["level"])
