@@ -77,8 +77,8 @@ class EcoRob(commands.Cog):
                             loon_cast = cash[0] + random_loon
                             cash_new = 0 - random_loon
 
-                            ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = {cash_new} WHERE user_id = {ctx.author.id}"
-                            maxergdb_cursor.execute(ecogame_sql_cash)
+                            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = {cash_new} WHERE user_id = {ctx.author.id}")
+                            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto + {cash_new} WHERE user_id = {ctx.author.id}")
                             db_maxerg.commit()
 
                             mogelijke_antwoorden = [
@@ -93,12 +93,15 @@ class EcoRob(commands.Cog):
 
                             loon_cast = loon[0]
 
-                            ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = cash + {loon_cast} WHERE user_id = {ctx.author.id}"
-                            maxergdb_cursor.execute(ecogame_sql_cash)
-                            db_maxerg.commit()
+                            maxergdb_cursor.execute(f"SELECT bank FROM maxerg_ecogame WHERE user_id = {member.id}")
+                            bank = maxergdb_cursor.fetchone()
+                            if bank is None:
+                                bank = (0,)
 
-                            ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = 0 WHERE user_id = {member.id}"
-                            maxergdb_cursor.execute(ecogame_sql_cash)
+                            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = 0 WHERE user_id = {member.id}")
+                            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = {bank} WHERE user_id = {member.id}")
+                            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = cash + {loon_cast} WHERE user_id = {ctx.author.id}")
+                            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto + {loon_cast} WHERE user_id = {ctx.author.id}")
                             db_maxerg.commit()
 
                             mogelijke_antwoorden = [
