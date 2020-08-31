@@ -153,7 +153,7 @@ class EcoRob(commands.Cog):
                 conversion = time.strftime("%#Mm %#Ss", time.gmtime(error.retry_after))
 
             em = discord.Embed(
-                description=f"X Je moet {conversion} wachten om deze command opnieuw te gebruiken.",
+                description=f"<:error:725030739531268187> Je moet {conversion} wachten om deze command opnieuw te gebruiken.",
                 color=embed_color,
                 timestamp=datetime.datetime.utcnow()
             )
