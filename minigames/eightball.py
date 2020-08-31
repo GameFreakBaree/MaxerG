@@ -1,6 +1,6 @@
 from discord.ext import commands
 import random
-import time
+import asyncio
 
 
 class EightBall(commands.Cog):
@@ -27,7 +27,7 @@ class EightBall(commands.Cog):
         else:
             await ctx.channel.purge(limit=1)
             del_msg = await ctx.send(f"Je moet in <#721013671307772587> zitten om deze command uit te voeren.")
-            time.sleep(3)
+            await asyncio.sleep(3)
             await del_msg.delete()
 
 
