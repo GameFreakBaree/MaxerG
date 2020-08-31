@@ -62,12 +62,8 @@ class EcoWithdraw(commands.Cog):
                     em.set_footer(text=embed_footer[0])
                     await ctx.send(embed=em)
                 else:
-                    ecogame_sql_cash = f"UPDATE maxerg_ecogame SET bank = bank - {amount} WHERE user_id = {ctx.author.id}"
-                    maxergdb_cursor.execute(ecogame_sql_cash)
-                    db_maxerg.commit()
-
-                    ecogame_sql_cash = f"UPDATE maxerg_ecogame SET cash = cash + {amount} WHERE user_id = {ctx.author.id}"
-                    maxergdb_cursor.execute(ecogame_sql_cash)
+                    maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET bank = bank - {amount} WHERE user_id = {ctx.author.id}")
+                    maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = cash + {amount} WHERE user_id = {ctx.author.id}")
                     db_maxerg.commit()
 
                     em = discord.Embed(
