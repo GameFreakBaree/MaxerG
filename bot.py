@@ -25,7 +25,7 @@ async def change_status():
 
 @client.command()
 async def load(ctx, types, extension):
-    if ctx.author.id == 643072638075273248:
+    if ctx.author.id == 643072638075273248 or ctx.author.id == 513020026488619012:
         if extension == "*":
             for filenames in os.listdir(f'./{types}'):
                 if filenames.endswith('.py'):
@@ -39,7 +39,7 @@ async def load(ctx, types, extension):
 
 @client.command()
 async def reload(ctx, types, extension):
-    if ctx.author.id == 643072638075273248:
+    if ctx.author.id == 643072638075273248 or ctx.author.id == 513020026488619012:
         client.unload_extension(f'{types}.{extension}')
         client.load_extension(f'{types}.{extension}')
         print(f"Reload {extension}, door {ctx.author}")
@@ -48,7 +48,7 @@ async def reload(ctx, types, extension):
 
 @client.command()
 async def unload(ctx, types, extension):
-    if ctx.author.id == 643072638075273248:
+    if ctx.author.id == 643072638075273248 or ctx.author.id == 513020026488619012:
         if extension == "*":
             for filenames in os.listdir(f'./{types}'):
                 if filenames.endswith('.py'):
