@@ -78,7 +78,8 @@ class Commands(commands.Cog):
                             f"\n• {prefix[0]}wyr - Krijg een Would You Rather vraag."
                             f"\n• {prefix[0]}fact - Krijg een willekeurig weetje te zien."
                             f"\n• {prefix[0]}8ball - Vraag de magische 8ball een vraag."
-                            f"\n• {prefix[0]}coinflip - Wordt het kop of munt?",
+                            f"\n• {prefix[0]}coinflip - Wordt het kop of munt?"
+                            f"\n• {prefix[0]}nhie- Speel Never Have I Ever met de bot.",
                 color=embed_color,
                 timestamp=datetime.datetime.utcnow()
             )
