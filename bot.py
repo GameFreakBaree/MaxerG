@@ -1,4 +1,5 @@
 import os
+import discord
 from discord.ext import commands
 import json
 
@@ -13,6 +14,13 @@ client = commands.Bot(command_prefix='!', case_insensitive=True)
 client.remove_command("help")
 
 bot_naam = "MaxerG"
+
+
+async def change_status():
+    await client.wait_until_ready()
+    if client.is_ready():
+        status = discord.Activity(name=f"www.MaxerG.net", type=discord.ActivityType.playing)
+        await client.change_presence(activity=status)
 
 
 @client.command()
@@ -87,4 +95,5 @@ for filename in os.listdir('./minigames'):
         print(f"[{bot_naam}] Minigames > {filename[:-3]} > Succesvol Geladen!")
         client.load_extension(f'minigames.{filename[:-3]}')
 
+client.loop.create_task(change_status())
 client.run(token)
