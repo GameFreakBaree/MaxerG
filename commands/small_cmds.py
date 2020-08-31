@@ -13,23 +13,6 @@ database = settings['database']
 
 read_settings.close()
 
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
-
-db_maxerg.commit()
-maxergdb_cursor = db_maxerg.cursor()
-
-maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-embed_color_tuple = maxergdb_cursor.fetchone()
-embed_color = int(embed_color_tuple[0], 16)
-
-maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-embed_footer = maxergdb_cursor.fetchone()
-
 
 class SmallCmds(commands.Cog):
 
@@ -46,6 +29,16 @@ class SmallCmds(commands.Cog):
     async def ip(self, ctx):
         verboden_channels = ["✨│hoger-lager"]
         if str(ctx.channel) not in verboden_channels:
+            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+            maxergdb_cursor = db_maxerg.cursor()
+
+            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
+            embed_color_tuple = maxergdb_cursor.fetchone()
+            embed_color = int(embed_color_tuple[0], 16)
+
+            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
+            embed_footer = maxergdb_cursor.fetchone()
+
             embed = discord.Embed(
                 title="Handige Informatie",
                 description="__IP:__ **play.MaxerG.net**\n__Versie:__ **1.12.2 - 1.16.1**\n"
@@ -56,11 +49,22 @@ class SmallCmds(commands.Cog):
             embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
             embed.set_footer(text=embed_footer[0])
             await ctx.send(embed=embed)
+            db_maxerg.close()
 
     @commands.command(aliases=["users"])
     async def members(self, ctx):
         command_channels = ["🤖│commands", "🔒│bots"]
         if str(ctx.channel) in command_channels:
+            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+            maxergdb_cursor = db_maxerg.cursor()
+
+            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
+            embed_color_tuple = maxergdb_cursor.fetchone()
+            embed_color = int(embed_color_tuple[0], 16)
+
+            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
+            embed_footer = maxergdb_cursor.fetchone()
+
             members_embed = discord.Embed(
                 title="Members",
                 description=f"Er zijn {ctx.guild.member_count} gebruikers in {ctx.guild.name}!",
@@ -69,6 +73,7 @@ class SmallCmds(commands.Cog):
             members_embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
             members_embed.set_footer(text=embed_footer[0])
             await ctx.send(embed=members_embed)
+            db_maxerg.close()
 
 
 def setup(client):
