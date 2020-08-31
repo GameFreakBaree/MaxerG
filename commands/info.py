@@ -47,53 +47,43 @@ class Informatie(commands.Cog):
 
             joined_correct = member.joined_at.strftime("%d/%m/%Y")
 
-            overlordrole = get(member.guild.roles, name="Overlord")
-            godrole = get(member.guild.roles, name="God")
-            titanrole = get(member.guild.roles, name="Titan")
-            lordrole = get(member.guild.roles, name="Lord")
+            lvl20_role = get(member.guild.roles, name="LvL.20")
+            lvl15_role = get(member.guild.roles, name="LvL.15")
+            lvl10_role = get(member.guild.roles, name="LvL.10")
+            lvl5_role = get(member.guild.roles, name="LvL.5")
 
-            if overlordrole in member.roles:
-                overlord_emote = "✅"
+            if lvl20_role in member.roles:
+                lvl20_emote = "✅"
             else:
-                overlord_emote = ":x:"
+                lvl20_emote = ":x:"
 
-            if godrole in member.roles:
-                god_emote = "✅"
+            if lvl15_role in member.roles:
+                lvl15_emote = "✅"
             else:
-                god_emote = ":x:"
+                lvl15_emote = ":x:"
 
-            if titanrole in member.roles:
-                titan_emote = "✅"
+            if lvl10_role in member.roles:
+                lvl10_emote = "✅"
             else:
-                titan_emote = ":x:"
+                lvl10_emote = ":x:"
 
-            if lordrole in member.roles:
-                lord_emote = "✅"
+            if lvl5_role in member.roles:
+                lvl5_emote = "✅"
             else:
-                lord_emote = ":x:"
+                lvl5_emote = ":x:"
 
             maxergdb_cursor.execute(f"SELECT user_id FROM maxerg_levels WHERE user_id = {member.id}")
             user_id = maxergdb_cursor.fetchone()
 
             if user_id is None:
-                instert_new_user_id = "INSERT INTO maxerg_levels (user_id, experience, berichten, level) VALUES (%s, %s, %s, %s)"
-                lvl_record = (member.id, 0, 0, 0)
-                maxergdb_cursor.execute(instert_new_user_id, lvl_record)
-                db_maxerg.commit()
-
-            maxergdb_cursor.execute(f"SELECT berichten FROM maxerg_levels WHERE user_id = {member.id}")
-            berichten = maxergdb_cursor.fetchone()
-
-            maxergdb_cursor.execute(f"SELECT level FROM maxerg_levels WHERE user_id = {member.id}")
-            level_check = maxergdb_cursor.fetchone()
-
-            maxergdb_cursor.execute(f"SELECT count FROM maxerg_modlogs WHERE user_id = {member.id}")
-            interfractions_tuple = maxergdb_cursor.fetchone()
-
-            if interfractions_tuple is None:
-                interfractions = 0
+                berichten = (0,)
+                level_check = (0,)
             else:
-                interfractions = interfractions_tuple[0]
+                maxergdb_cursor.execute(f"SELECT berichten FROM maxerg_levels WHERE user_id = {member.id}")
+                berichten = maxergdb_cursor.fetchone()
+    
+                maxergdb_cursor.execute(f"SELECT level FROM maxerg_levels WHERE user_id = {member.id}")
+                level_check = maxergdb_cursor.fetchone()
 
             info_embed = discord.Embed(
                 title=f"{member.display_name}",
@@ -107,10 +97,9 @@ class Informatie(commands.Cog):
             info_embed.add_field(name="Gejoined op", value=joined_correct, inline=True)
             info_embed.add_field(name="Level", value=f"{level_check[0]}", inline=True)
             info_embed.add_field(name="Berichten", value=f"{berichten[0]}", inline=True)
-            info_embed.add_field(name="Waarschuwingen", value=f"{interfractions}", inline=False)
             info_embed.add_field(name="Hoogste Rank", value=member.top_role, inline=True)
-            info_embed.add_field(name="Ranks:", value=f"{overlord_emote} Overlord\n{god_emote} God"
-                                                      f"\n{titan_emote} Titan\n{lord_emote} Lord\n", inline=True)
+            info_embed.add_field(name="Ranks:", value=f"{lvl20_emote} Level 20+\n{lvl15_emote} Level 15+"
+                                                      f"\n{lvl10_emote} Level 10+\n{lvl5_emote} Level 5+\n", inline=True)
             info_embed.set_thumbnail(url=member.avatar_url)
             info_embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
             info_embed.set_footer(text=embed_footer[0])
