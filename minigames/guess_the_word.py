@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import json
 import mysql.connector
-import time
+import asyncio
 import random
 
 with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
@@ -15,13 +15,6 @@ database = settings['database']
 
 read_settings.close()
 
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
-
 
 class HigherLower(commands.Cog):
 
@@ -33,7 +26,7 @@ class HigherLower(commands.Cog):
         if message.author.bot is False:
             gtw_channels = ["❓│raad-het-woord"]
             if str(message.channel) in gtw_channels:
-                db_maxerg.commit()
+                db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
                 maxergdb_cursor = db_maxerg.cursor()
 
                 maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
@@ -107,7 +100,7 @@ class HigherLower(commands.Cog):
                             maxergdb_cursor.execute(update_sql2, (random_nieuw_woord,))
                             db_maxerg.commit()
 
-                            time.sleep(2)
+                            await asyncio.sleep(3)
 
                             nieuw_woord_shuffle = list(random_nieuw_woord)
                             random.shuffle(nieuw_woord_shuffle)
@@ -124,6 +117,7 @@ class HigherLower(commands.Cog):
                             await message.add_reaction(emoji=error_emote)
                     except ValueError:
                         await message.channel.purge(limit=1)
+                db_maxerg.close()
 
 
 def setup(client):
