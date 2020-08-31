@@ -56,7 +56,7 @@ async def ticket_create(self, bericht, member, args, cmd):
     await ticket_channel.set_permissions(bericht.guild.get_role(bericht.guild.id), send_messages=False,
                                          read_messages=False)
 
-    role = bericht.guild.get_role(739810864177348689)
+    role = bericht.guild.get_role(721050870590210149)
     await ticket_channel.set_permissions(role, send_messages=True, read_messages=True, add_reactions=True,
                                          embed_links=True, attach_files=True, read_message_history=True,
                                          external_emojis=True)
@@ -115,7 +115,7 @@ class Ticket(commands.Cog):
 
         if not member.bot:
             if message_id == setup_message_id:
-                if payload.emoji.name == "✅":
+                if payload.emoji.name == "check":
                     maxergdb_cursor.execute(f"SELECT ticket_member_ids FROM maxerg_tickets WHERE ticket_member_ids = {member.id}")
                     user_id = maxergdb_cursor.fetchone()
 
@@ -123,12 +123,12 @@ class Ticket(commands.Cog):
                         gebruiker_getinfo = self.client.get_user(member.id)
                         bericht = await self.client.get_channel(setup_channel_id).fetch_message(setup_message_id)
                         await gebruiker_getinfo.send("Je hebt al een ticket open.")
-                        await bericht.remove_reaction(emoji='✅', member=member)
+                        await bericht.remove_reaction(emoji='check:725030739543982240', member=member)
                     else:
                         args = None
                         bericht = await self.client.get_channel(setup_channel_id).fetch_message(setup_message_id)
                         await ticket_create(self, bericht, member, args, cmd=None)
-                        await bericht.remove_reaction(emoji='✅', member=member)
+                        await bericht.remove_reaction(emoji='check:725030739543982240', member=member)
 
     @commands.command(aliases=["ticket"])
     async def new(self, ctx, *, args=None):
