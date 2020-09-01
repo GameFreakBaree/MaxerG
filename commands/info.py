@@ -15,14 +15,6 @@ database = settings['database']
 
 read_settings.close()
 
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
-
-
 class Informatie(commands.Cog):
 
     def __init__(self, client):
@@ -32,7 +24,7 @@ class Informatie(commands.Cog):
     async def info(self, ctx, member: discord.Member = None):
         command_channels = ["🤖│commands", "🔒│bots"]
         if str(ctx.channel) in command_channels:
-            db_maxerg.commit()
+            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
             maxergdb_cursor = db_maxerg.cursor()
 
             maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
@@ -81,7 +73,7 @@ class Informatie(commands.Cog):
             else:
                 maxergdb_cursor.execute(f"SELECT berichten FROM maxerg_levels WHERE user_id = {member.id}")
                 berichten = maxergdb_cursor.fetchone()
-    
+
                 maxergdb_cursor.execute(f"SELECT level FROM maxerg_levels WHERE user_id = {member.id}")
                 level_check = maxergdb_cursor.fetchone()
 
@@ -104,6 +96,7 @@ class Informatie(commands.Cog):
             info_embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
             info_embed.set_footer(text=embed_footer[0])
             await ctx.send(embed=info_embed)
+            db_maxerg.close()
 
 
 def setup(client):
