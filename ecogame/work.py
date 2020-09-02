@@ -7,15 +7,19 @@ import time
 import datetime
 import mysql.connector
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+currency = settings['currency']
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
+
+embed_color = int(embedcolor, 16)
 
 
 class EcoWork(commands.Cog):
@@ -28,22 +32,17 @@ class EcoWork(commands.Cog):
     async def work(self, ctx):
         minigame_channels = ["💰│economy-game", "🔒│bots"]
         if str(ctx.channel) in minigame_channels:
-            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
-            maxergdb_cursor = db_maxerg.cursor()
-
-            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-            embed_footer = maxergdb_cursor.fetchone()
-
-            maxergdb_cursor.execute("SELECT currency FROM maxerg_config")
-            currency_tuple = maxergdb_cursor.fetchone()
-            currency = currency_tuple[0]
-
             loon = randint(6, 25)
             loon_cast = int(loon)
+
+            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+            maxergdb_cursor = db_maxerg.cursor()
 
             maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = cash + {loon_cast} WHERE user_id = {ctx.author.id}")
             maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto + {loon_cast} WHERE user_id = {ctx.author.id}")
             db_maxerg.commit()
+
+            db_maxerg.close()
 
             mogelijke_antwoorden = [f'Je kreeg {currency}{loon_cast} om hamburgers te maken in de McDonalds.',
                                     f'Je baas betaalde je {currency}{loon_cast} om zijn kantoor te renoveren.',
@@ -63,29 +62,12 @@ class EcoWork(commands.Cog):
                 timestamp=datetime.datetime.utcnow()
             )
             em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-            em.set_footer(text=embed_footer[0])
+            em.set_footer(text=embed_footer)
             await ctx.send(embed=em)
-
-            db_maxerg.close()
-        else:
-            await ctx.channel.purge(limit=1)
-            del_msg = await ctx.send(f"Je moet in <#708055327958106164> zitten om deze command uit te voeren.")
-            time.sleep(3)
-            await del_msg.delete()
 
     @work.error
     async def work_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
-            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
-            maxergdb_cursor = db_maxerg.cursor()
-
-            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-            embed_footer = maxergdb_cursor.fetchone()
-
-            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-            embed_color_tuple = maxergdb_cursor.fetchone()
-            embed_color = int(embed_color_tuple[0], 16)
-
             cooldown_limit = error.retry_after
             if cooldown_limit >= 86400:
                 conversion = time.strftime("%#dd %#Hu %#Mm %#Ss", time.gmtime(error.retry_after))
@@ -100,10 +82,8 @@ class EcoWork(commands.Cog):
                 timestamp=datetime.datetime.utcnow()
             )
             em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-            em.set_footer(text=embed_footer[0])
+            em.set_footer(text=embed_footer)
             await ctx.send(embed=em)
-
-            db_maxerg.close()
         else:
             raise error
 

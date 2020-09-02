@@ -7,15 +7,19 @@ import time
 import datetime
 import mysql.connector
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+currency = settings['currency']
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
+
+embed_color = int(embedcolor, 16)
 
 
 class EcoSlut(commands.Cog):
@@ -30,13 +34,6 @@ class EcoSlut(commands.Cog):
         if str(ctx.channel) in minigame_channels:
             db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
             maxergdb_cursor = db_maxerg.cursor()
-
-            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-            embed_footer = maxergdb_cursor.fetchone()
-
-            maxergdb_cursor.execute("SELECT currency FROM maxerg_config")
-            currency_tuple = maxergdb_cursor.fetchone()
-            currency = currency_tuple[0]
 
             failrate = randint(0, 3)
             if failrate == 1:
@@ -77,29 +74,14 @@ class EcoSlut(commands.Cog):
                 timestamp=datetime.datetime.utcnow()
             )
             em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-            em.set_footer(text=embed_footer[0])
+            em.set_footer(text=embed_footer)
             await ctx.send(embed=em)
 
             db_maxerg.close()
-        else:
-            await ctx.channel.purge(limit=1)
-            del_msg = await ctx.send(f"Je moet in <#747575812605214900> zitten om deze command uit te voeren.")
-            time.sleep(3)
-            await del_msg.delete()
 
     @slut.error
     async def slut_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
-            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
-            maxergdb_cursor = db_maxerg.cursor()
-
-            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-            embed_footer = maxergdb_cursor.fetchone()
-
-            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-            embed_color_tuple = maxergdb_cursor.fetchone()
-            embed_color = int(embed_color_tuple[0], 16)
-
             cooldown_limit = error.retry_after
             if cooldown_limit >= 86400:
                 conversion = time.strftime("%#dd %#Hu %#Mm %#Ss", time.gmtime(error.retry_after))
@@ -114,10 +96,8 @@ class EcoSlut(commands.Cog):
                 timestamp=datetime.datetime.utcnow()
             )
             em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-            em.set_footer(text=embed_footer[0])
+            em.set_footer(text=embed_footer)
             await ctx.send(embed=em)
-
-            db_maxerg.close()
         else:
             raise error
 
