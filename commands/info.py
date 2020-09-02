@@ -5,15 +5,18 @@ import datetime
 from discord.utils import get
 import mysql.connector
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
+embed_color = int(embedcolor, 16)
+
 
 class Informatie(commands.Cog):
 
@@ -26,13 +29,6 @@ class Informatie(commands.Cog):
         if str(ctx.channel) in command_channels:
             db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
             maxergdb_cursor = db_maxerg.cursor()
-
-            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-            embed_color_tuple = maxergdb_cursor.fetchone()
-            embed_color = int(embed_color_tuple[0], 16)
-
-            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-            embed_footer = maxergdb_cursor.fetchone()
 
             if member is None:
                 member = ctx.author
@@ -94,8 +90,9 @@ class Informatie(commands.Cog):
                                                       f"\n{lvl10_emote} Level 10+\n{lvl5_emote} Level 5+\n", inline=True)
             info_embed.set_thumbnail(url=member.avatar_url)
             info_embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-            info_embed.set_footer(text=embed_footer[0])
+            info_embed.set_footer(text=embed_footer)
             await ctx.send(embed=info_embed)
+
             db_maxerg.close()
 
 
