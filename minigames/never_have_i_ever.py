@@ -1,19 +1,19 @@
 import discord
 from discord.ext import commands
-import asyncio
 import random
 import json
-import mysql.connector
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
+embed_color = int(embedcolor, 16)
 
 
 class NeverHaveIEver(commands.Cog):
@@ -25,16 +25,6 @@ class NeverHaveIEver(commands.Cog):
     async def neverhaveiever(self, ctx):
         command_channels = ["🎨│minigames", "🔒│bots"]
         if str(ctx.channel) in command_channels:
-            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
-            maxergdb_cursor = db_maxerg.cursor()
-
-            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-            embed_footer = maxergdb_cursor.fetchone()
-
-            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-            embed_color_tuple = maxergdb_cursor.fetchone()
-            embed_color = int(embed_color_tuple[0], 16)
-
             t = ["Ik ben nog nooit in slaap gevallen in de cinema",
                  "Ik heb nog nooit een vals ID gebruikt om ergens binnen te komen",
                  "Ik heb nog nooit iets gewonnen",
@@ -66,17 +56,10 @@ class NeverHaveIEver(commands.Cog):
                 color=embed_color
             )
             embed.set_author(name="Never Have I Ever", icon_url=self.client.user.avatar_url)
-            embed.set_footer(text=embed_footer[0])
+            embed.set_footer(text=embed_footer)
             msg = await ctx.send(embed=embed)
             for emoji in ('1️⃣', '2️⃣'):
                 await msg.add_reaction(emoji=f"{emoji}")
-
-            db_maxerg.close()
-        else:
-            await ctx.channel.purge(limit=1)
-            del_msg = await ctx.send(f"Je moet in <#721013671307772587> zitten om deze command uit te voeren.")
-            await asyncio.sleep(3)
-            await del_msg.delete()
 
 
 def setup(client):

@@ -1,5 +1,4 @@
 from discord.ext import commands
-import asyncio
 import random
 
 
@@ -88,11 +87,6 @@ class Facts(commands.Cog):
                  "de letter \"e\" de meestgebruikte letter is in bijna elke taal die de letter \"e\" bevat."]
             responses = random.choice(t)
             await ctx.send(f"Wist je dat {responses}!")
-        else:
-            await ctx.channel.purge(limit=1)
-            del_msg = await ctx.send(f"Je moet in <#721013671307772587> zitten om deze command uit te voeren.")
-            await asyncio.sleep(3)
-            await del_msg.delete()
 
 
 def setup(client):

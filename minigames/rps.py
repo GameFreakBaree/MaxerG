@@ -1,20 +1,21 @@
 import datetime
 import json
-import asyncio
 from random import randint
 import discord
 from discord.ext import commands
-import mysql.connector
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
+
+embed_color = int(embedcolor, 16)
 
 
 class RockPaperScissors(commands.Cog):
@@ -24,15 +25,6 @@ class RockPaperScissors(commands.Cog):
 
     @commands.command(aliases=["sps", "steen-papier-schaar", "rock-paper-scissors"])
     async def rps(self, ctx, *, question=None):
-        db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
-        maxergdb_cursor = db_maxerg.cursor()
-
-        maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-        embed_footer = maxergdb_cursor.fetchone()
-
-        maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-        embed_color_tuple = maxergdb_cursor.fetchone()
-        embed_color = int(embed_color_tuple[0], 16)
 
         if question is None:
             await ctx.send(
@@ -53,7 +45,7 @@ class RockPaperScissors(commands.Cog):
                 )
                 won_embed.set_thumbnail(url=self.client.user.avatar_url)
                 won_embed.set_author(name="Steen Papier Schaar", icon_url=self.client.user.avatar_url)
-                won_embed.set_footer(text=embed_footer[0])
+                won_embed.set_footer(text=embed_footer)
 
                 lose_embed = discord.Embed(
                     title="Je hebt verloren!",
@@ -63,7 +55,7 @@ class RockPaperScissors(commands.Cog):
                 )
                 lose_embed.set_thumbnail(url=self.client.user.avatar_url)
                 lose_embed.set_author(name="Steen Papier Schaar", icon_url=self.client.user.avatar_url)
-                lose_embed.set_footer(text=embed_footer[0])
+                lose_embed.set_footer(text=embed_footer)
 
                 tie_embed = discord.Embed(
                     title="Je hebt gelijkgespeeld!",
@@ -73,7 +65,7 @@ class RockPaperScissors(commands.Cog):
                 )
                 tie_embed.set_thumbnail(url=self.client.user.avatar_url)
                 tie_embed.set_author(name="Steen Papier Schaar", icon_url=self.client.user.avatar_url)
-                tie_embed.set_footer(text=embed_footer[0])
+                tie_embed.set_footer(text=embed_footer)
 
                 if question == responses:
                     await ctx.send(embed=tie_embed)
@@ -95,12 +87,6 @@ class RockPaperScissors(commands.Cog):
                 else:
                     await ctx.send(
                         "Dit is geen geldig argument. Probeer opnieuw. (Je kan kiezen uit: steen, papier, schaar)")
-                db_maxerg.close()
-            else:
-                await ctx.channel.purge(limit=1)
-                del_msg = await ctx.send(f"Je moet in <#721013671307772587> zitten om deze command uit te voeren.")
-                await asyncio.sleep(3)
-                await del_msg.delete()
 
 
 def setup(client):

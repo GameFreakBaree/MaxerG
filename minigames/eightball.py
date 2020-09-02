@@ -1,6 +1,5 @@
 from discord.ext import commands
 import random
-import asyncio
 
 
 class EightBall(commands.Cog):
@@ -24,11 +23,6 @@ class EightBall(commands.Cog):
                      "Vooruitzicht is niet zo goed", "Tekenen wijzen op ja", "Zeer twijfelachtig"]
                 responses = random.choice(t)
                 await ctx.send(responses)
-        else:
-            await ctx.channel.purge(limit=1)
-            del_msg = await ctx.send(f"Je moet in <#721013671307772587> zitten om deze command uit te voeren.")
-            await asyncio.sleep(3)
-            await del_msg.delete()
 
 
 def setup(client):

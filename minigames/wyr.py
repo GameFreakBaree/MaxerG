@@ -1,5 +1,4 @@
 from discord.ext import commands
-import asyncio
 import random
 
 
@@ -77,11 +76,6 @@ class WouldYouRather(commands.Cog):
             msg = await ctx.send(f"Wil je liever {responses}!")
             for emoji in ('1️⃣', '2️⃣'):
                 await msg.add_reaction(emoji=f"{emoji}")
-        else:
-            await ctx.channel.purge(limit=1)
-            del_msg = await ctx.send(f"Je moet in <#721013671307772587> zitten om deze command uit te voeren.")
-            await asyncio.sleep(3)
-            await del_msg.delete()
 
 
 def setup(client):
