@@ -4,15 +4,18 @@ import json
 from random import randint
 import mysql.connector
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
+
+embed_color = int(embedcolor, 16)
 
 
 class HigherLower(commands.Cog):
@@ -27,13 +30,6 @@ class HigherLower(commands.Cog):
             if str(message.channel) in hl_channels:
                 db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
                 maxergdb_cursor = db_maxerg.cursor()
-
-                maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-                embed_color_tuple = maxergdb_cursor.fetchone()
-                embed_color = int(embed_color_tuple[0], 16)
-
-                maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-                embed_footer = maxergdb_cursor.fetchone()
 
                 maxergdb_cursor.execute("SELECT random_number FROM maxerg_higherlower")
                 luckynumber_tuple = maxergdb_cursor.fetchone()
@@ -71,7 +67,7 @@ class HigherLower(commands.Cog):
                                             f"\nJe hebt €{random_money} gekregen.",
                                 color=embed_color
                             )
-                            embed.set_footer(text=embed_footer[0])
+                            embed.set_footer(text=embed_footer)
                             await message.channel.send(embed=embed)
 
                             random_number = randint(1, 100000)
