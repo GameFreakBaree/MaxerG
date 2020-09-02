@@ -6,31 +6,17 @@ from discord.utils import get
 import datetime
 import mysql.connector
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
-
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
-
-maxergdb_cursor = db_maxerg.cursor()
-
-maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-embed_color_tuple = maxergdb_cursor.fetchone()
-embed_color = int(embed_color_tuple[0], 16)
-
-maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-embed_footer = maxergdb_cursor.fetchone()
+embed_color = int(embedcolor, 16)
 
 
 class LevelingSystem(commands.Cog):
@@ -47,7 +33,8 @@ class LevelingSystem(commands.Cog):
             if retry_after:
                 return
             else:
-                db_maxerg.commit()
+                db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+                maxergdb_cursor = db_maxerg.cursor()
 
                 # dead_channels = ["📈│memes"]
                 # if str(message.channel) in dead_channels:
@@ -95,7 +82,7 @@ class LevelingSystem(commands.Cog):
                 lvl_start_tuple = maxergdb_cursor.fetchone()
                 lvl_start = lvl_start_tuple[0]
 
-                level_up_channel = self.client.get_channel(747547955887603872)
+                level_up_channel = self.client.get_channel(563347368037056513)
                 guild = message.guild
                 lvl_end = int(experience ** (1 / 3.5))
                 if lvl_start < lvl_end:
@@ -120,7 +107,7 @@ class LevelingSystem(commands.Cog):
                     )
                     level_up_embed.set_thumbnail(url=message.author.avatar_url)
                     level_up_embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-                    level_up_embed.set_footer(text=embed_footer[0])
+                    level_up_embed.set_footer(text=embed_footer)
                     await level_up_channel.send(embed=level_up_embed)
 
                     level_sql_lvl = f"UPDATE maxerg_levels SET level = {lvl_end} WHERE user_id = {message.author.id}"
@@ -157,14 +144,17 @@ class LevelingSystem(commands.Cog):
                     maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto + {random_money} WHERE user_id = {message.author.id}")
                     db_maxerg.commit()
 
+                db_maxerg.close()
+
     @commands.command(aliases=["level"])
     async def rank(self, ctx, *, member: discord.Member = None):
-        if member is None:
-            member = ctx.author
-
         command_channels = ["🤖│commands", "🔒│bots"]
         if str(ctx.channel) in command_channels:
-            db_maxerg.commit()
+            if member is None:
+                member = ctx.author
+
+            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+            maxergdb_cursor = db_maxerg.cursor()
 
             maxergdb_cursor.execute(f"SELECT berichten FROM maxerg_levels WHERE user_id = {member.id}")
             berichten = maxergdb_cursor.fetchone()
@@ -181,14 +171,16 @@ class LevelingSystem(commands.Cog):
             level_embed.add_field(name="Berichten", value=f"{berichten[0]}", inline=True)
             level_embed.set_thumbnail(url=member.avatar_url)
             level_embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-            level_embed.set_footer(text=embed_footer[0])
+            level_embed.set_footer(text=embed_footer)
             await ctx.send(embed=level_embed)
+            db_maxerg.close()
 
     @commands.command()
     async def levels(self, ctx, page=1):
         command_channels = ["🤖│commands", "🔒│bots", "🔒│staff"]
         if str(ctx.channel) in command_channels:
-            db_maxerg.commit()
+            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+            maxergdb_cursor = db_maxerg.cursor()
 
             pre_offset = page - 1
             offset = pre_offset * 10
@@ -232,8 +224,9 @@ class LevelingSystem(commands.Cog):
                 timestamp=datetime.datetime.utcnow()
             )
             embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-            embed.set_footer(text=embed_footer[0])
+            embed.set_footer(text=embed_footer)
             await ctx.send(embed=embed)
+            db_maxerg.close()
 
 
 def setup(client):

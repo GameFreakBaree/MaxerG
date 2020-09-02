@@ -3,35 +3,20 @@ import datetime
 import time
 import json
 from discord.ext import commands
-import mysql.connector
 
 start_time = time.time()
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
-
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
-
-maxergdb_cursor = db_maxerg.cursor()
-
-maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-embed_color_tuple = maxergdb_cursor.fetchone()
-embed_color = int(embed_color_tuple[0], 16)
-
-maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-embed_footer = maxergdb_cursor.fetchone()
+embed_color = int(embedcolor, 16)
 
 
 class Uptime(commands.Cog):
@@ -52,7 +37,7 @@ class Uptime(commands.Cog):
                 description=f"{text}",
                 color=embed_color
             )
-            embed.set_footer(text=embed_footer[0])
+            embed.set_footer(text=embed_footer)
             await ctx.send(embed=embed)
 
 

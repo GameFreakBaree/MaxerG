@@ -3,15 +3,17 @@ from discord.ext import commands
 import json
 import mysql.connector
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
+embed_color = int(embedcolor, 16)
 
 
 class SetupCmd(commands.Cog):
@@ -25,13 +27,6 @@ class SetupCmd(commands.Cog):
         db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
         maxergdb_cursor = db_maxerg.cursor()
 
-        maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-        embed_color_tuple = maxergdb_cursor.fetchone()
-        embed_color = int(embed_color_tuple[0], 16)
-
-        maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-        embed_footer = maxergdb_cursor.fetchone()
-
         await ctx.channel.purge(limit=2)
 
         em = discord.Embed(
@@ -39,7 +34,7 @@ class SetupCmd(commands.Cog):
             description=f"Om een ticket aan te maken, reageer met <:check:725030739543982240>",
             color=embed_color
         )
-        em.set_footer(text=embed_footer[0])
+        em.set_footer(text=embed_footer)
         embed = await ctx.send(embed=em)
 
         await embed.add_reaction(emoji='check:725030739543982240')
