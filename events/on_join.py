@@ -1,29 +1,13 @@
 import discord
 from discord.ext import commands
 import json
-import mysql.connector
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
-host = settings['host']
-user = settings['user']
-password = settings['password']
-database = settings['database']
+embed_footer = settings['footer']
 
 read_settings.close()
-
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
-
-maxergdb_cursor = db_maxerg.cursor()
-
-maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-embed_footer = maxergdb_cursor.fetchone()
 
 
 class OnJoin(commands.Cog):
@@ -33,8 +17,8 @@ class OnJoin(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        join_channel = self.client.get_channel(739810780735602761)
-        stats_channel = self.client.get_channel(742705535899533333)
+        join_channel = self.client.get_channel(579574134275833869)
+        stats_channel = self.client.get_channel(640341412306485251)
         guild_ids = stats_channel.guild
 
         embed = discord.Embed(
@@ -43,13 +27,13 @@ class OnJoin(commands.Cog):
         )
         embed.set_author(name=member, icon_url=member.avatar_url)
         embed.set_footer(
-            text=f"{embed_footer[0]} | Speler #{guild_ids.member_count}",
+            text=f"{embed_footer} | Speler #{guild_ids.member_count}",
             icon_url=self.client.user.avatar_url
         )
         await join_channel.send(embed=embed)
 
-        log_channel = self.client.get_channel(742715965128704030)
-        await log_channel.send(f"<:check:742717346128593099> {member} is gejoined!")
+        log_channel = self.client.get_channel(736725990340034591)
+        await log_channel.send(f"<:check:725030739543982240> {member} is gejoined!")
 
         await stats_channel.edit(name=f"Spelers: {guild_ids.member_count}")
 
