@@ -5,15 +5,18 @@ import mysql.connector
 import asyncio
 import random
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
+
+embed_color = int(embedcolor, 16)
 
 
 class HigherLower(commands.Cog):
@@ -28,13 +31,6 @@ class HigherLower(commands.Cog):
             if str(message.channel) in gtw_channels:
                 db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
                 maxergdb_cursor = db_maxerg.cursor()
-
-                maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-                embed_color_tuple = maxergdb_cursor.fetchone()
-                embed_color = int(embed_color_tuple[0], 16)
-
-                maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-                embed_footer = maxergdb_cursor.fetchone()
 
                 maxergdb_cursor.execute("SELECT random_woord FROM maxerg_guessword")
                 random_word = maxergdb_cursor.fetchone()
@@ -64,12 +60,34 @@ class HigherLower(commands.Cog):
                                 color=embed_color
                             )
                             embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-                            embed.set_footer(text=embed_footer[0])
+                            embed.set_footer(text=embed_footer)
                             await message.channel.send(embed=embed)
 
                             t = [
-                                "nothing to display here because of a disadvantage for not coders",
-                                "add here your own words if you wanna use this"
+                                "water",
+                                "maxerg",
+                                "bloemkool",
+                                "frieten",
+                                "apple",
+                                "monitor",
+                                "toetsenbord",
+                                "muismat",
+                                "headset",
+                                "papier",
+                                "microfoon",
+                                "macbook",
+                                "iphone",
+                                "slaapzak",
+                                "boekentas",
+                                "rugzak",
+                                "gordijn",
+                                "airpods",
+                                "limonade",
+                                "playstation",
+                                "simulator",
+                                "minecraft",
+                                "minetopia",
+                                "nachtkastje"
                             ]
 
                             random_nieuw_woord = random.choice(t)
@@ -89,7 +107,7 @@ class HigherLower(commands.Cog):
                                 color=embed_color
                             )
                             embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-                            embed.set_footer(text=embed_footer[0])
+                            embed.set_footer(text=embed_footer)
                             await message.channel.send(embed=embed)
                         else:
                             await message.add_reaction(emoji=error_emote)
