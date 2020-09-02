@@ -3,25 +3,19 @@ import datetime
 import json
 from discord.ext import commands
 from discord.utils import get
-import mysql.connector
 from discord.ext.commands import MissingPermissions
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
-
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
+embed_color = int(embedcolor, 16)
 
 
 class Mute(commands.Cog):
@@ -33,15 +27,8 @@ class Mute(commands.Cog):
     @commands.has_permissions(manage_roles=True)
     async def mute(self, ctx, member: discord.Member = None, *, reason="Niet Vermeld"):
         if member is not None and member != ctx.author:
-            db_maxerg.commit()
-            maxergdb_cursor = db_maxerg.cursor()
-
             role = get(ctx.guild.roles, name="Muted")
             await member.add_roles(role)
-
-            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-            embed_color_tuple = maxergdb_cursor.fetchone()
-            embed_color = int(embed_color_tuple[0], 16)
 
             premute_embed = discord.Embed(
                 description=f"**Reden:** {reason}",
@@ -50,10 +37,7 @@ class Mute(commands.Cog):
             premute_embed.set_author(name=f"{member} is gemute!", icon_url=member.avatar_url)
             await ctx.send(embed=premute_embed)
 
-            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-            embed_footer = maxergdb_cursor.fetchone()
-
-            log_channel = self.client.get_channel(742715965128704030)
+            log_channel = self.client.get_channel(561243076450975754)
             mute_embed = discord.Embed(
                 color=embed_color,
                 timestamp=datetime.datetime.utcnow()

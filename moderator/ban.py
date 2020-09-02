@@ -3,24 +3,18 @@ import datetime
 import json
 from discord.ext import commands
 from discord.ext.commands import MissingPermissions
-import mysql.connector
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
-
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
+embed_color = int(embedcolor, 16)
 
 
 class Ban(commands.Cog):
@@ -32,16 +26,9 @@ class Ban(commands.Cog):
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, member: discord.Member = None, *, reason="Niet Vermeld"):
         if member is not None and member != ctx.author:
-            db_maxerg.commit()
-            maxergdb_cursor = db_maxerg.cursor()
-
             await member.send(f"Je bent verbannen van **{ctx.guild}** door **{ctx.author}**\n```\nReden: {reason}\n```")
 
             await member.ban(reason=reason)
-
-            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-            embed_color_tuple = maxergdb_cursor.fetchone()
-            embed_color = int(embed_color_tuple[0], 16)
 
             preban_embed = discord.Embed(
                 description=f"**Reden:** {reason}",
@@ -51,10 +38,7 @@ class Ban(commands.Cog):
             preban_embed.set_author(name=f"{member} is verbannen!", icon_url=member.avatar_url)
             await ctx.send(embed=preban_embed)
 
-            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-            embed_footer = maxergdb_cursor.fetchone()
-
-            log_channel = self.client.get_channel(742715965128704030)
+            log_channel = self.client.get_channel(561243076450975754)
             ban_embed = discord.Embed(
                 color=embed_color,
                 timestamp=datetime.datetime.utcnow()

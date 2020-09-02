@@ -2,26 +2,20 @@ import time
 import discord
 import datetime
 import json
-import mysql.connector
 from discord.ext import commands
 from discord.ext.commands import MissingPermissions
 
-with open('./db_settings.json', 'r', encoding='utf-8') as read_settings:
+with open('./config.json', 'r', encoding='utf-8') as read_settings:
     settings = json.load(read_settings)
 
 host = settings['host']
 user = settings['user']
 password = settings['password']
 database = settings['database']
-
+embedcolor = settings['embedcolor']
+embed_footer = settings['footer']
 read_settings.close()
-
-db_maxerg = mysql.connector.connect(
-    host=host,
-    database=database,
-    user=user,
-    passwd=password
-)
+embed_color = int(embedcolor, 16)
 
 
 class Clear(commands.Cog):
@@ -54,17 +48,7 @@ class Clear(commands.Cog):
                 time.sleep(3)
                 await delete_message.delete()
 
-            db_maxerg.commit()
-            maxergdb_cursor = db_maxerg.cursor()
-
-            maxergdb_cursor.execute("SELECT embedcolor FROM maxerg_config")
-            embed_color_tuple = maxergdb_cursor.fetchone()
-            embed_color = int(embed_color_tuple[0], 16)
-
-            maxergdb_cursor.execute("SELECT footer FROM maxerg_config")
-            embed_footer = maxergdb_cursor.fetchone()
-
-            log_channel = self.client.get_channel(742715965128704030)
+            log_channel = self.client.get_channel(561243076450975754)
             clear_embed = discord.Embed(
                 color=embed_color,
                 timestamp=datetime.datetime.utcnow()
@@ -74,7 +58,7 @@ class Clear(commands.Cog):
             clear_embed.add_field(name="Aantal Berichten", value=f"{amount}", inline=True)
             clear_embed.add_field(name="Channel", value=f"{ctx.channel.mention}", inline=True)
             clear_embed.set_author(name=f"[CLEAR] {ctx.author}", icon_url=ctx.author.avatar_url)
-            clear_embed.set_footer(text=embed_footer[0])
+            clear_embed.set_footer(text=embed_footer)
             await log_channel.send(embed=clear_embed)
 
     @clear.error
