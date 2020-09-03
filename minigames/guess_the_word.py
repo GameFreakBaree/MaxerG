@@ -63,32 +63,7 @@ class HigherLower(commands.Cog):
                             embed.set_footer(text=embed_footer)
                             await message.channel.send(embed=embed)
 
-                            t = [
-                                "water",
-                                "maxerg",
-                                "bloemkool",
-                                "frieten",
-                                "apple",
-                                "monitor",
-                                "toetsenbord",
-                                "muismat",
-                                "headset",
-                                "papier",
-                                "microfoon",
-                                "macbook",
-                                "iphone",
-                                "slaapzak",
-                                "boekentas",
-                                "rugzak",
-                                "gordijn",
-                                "airpods",
-                                "limonade",
-                                "playstation",
-                                "simulator",
-                                "minecraft",
-                                "minetopia",
-                                "nachtkastje"
-                            ]
+                            t = []
 
                             random_nieuw_woord = random.choice(t)
 
