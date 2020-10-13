@@ -5,31 +5,7 @@ import asyncio
 import random
 from settings import host, user, password, database, embedcolor, footer
 
-t = ["water", "google",
-     "maxerg", "coca-cola",
-     "bloemkool", "limonade",
-     "frieten", "python",
-     "apple", "macaroni",
-     "monitor", "lasagne",
-     "toetsenbord", "gordijn",
-     "muismat", "skateboard",
-     "headset", "rekenmachine",
-     "papier", "discord",
-     "microfoon", "developer",
-     "macbook", "roblox",
-     "iphone", "gemeentehuis",
-     "slaapzak", "politie",
-     "boekentas", "brandweer",
-     "rugzak", "ziekenhuis",
-     "gordijn", "bananen",
-     "airpods", "schoolbanken",
-     "limonade", "nintendo",
-     "playstation", "steelseries",
-     "simulator", "microsoft",
-     "minecraft", "popmuziek",
-     "minetopia", "verwijderen",
-     "nachtkastje", "opslaan",
-     "youtube", "opblazen"]
+t = ["EMPTY"]
 
 
 class GuessTheWord(commands.Cog):
