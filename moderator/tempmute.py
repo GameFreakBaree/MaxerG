@@ -1,22 +1,9 @@
 import discord
 import datetime
-import json
 from discord.ext import commands
 import asyncio
-from discord.ext.commands import MissingPermissions
 from discord.utils import get
-
-with open('./config.json', 'r', encoding='utf-8') as read_settings:
-    settings = json.load(read_settings)
-
-host = settings['host']
-user = settings['user']
-password = settings['password']
-database = settings['database']
-embedcolor = settings['embedcolor']
-embed_footer = settings['footer']
-read_settings.close()
-embed_color = int(embedcolor, 16)
+from settings import footer, embedcolor
 
 
 class Tempmute(commands.Cog):
@@ -43,14 +30,14 @@ class Tempmute(commands.Cog):
 
             premute_embed = discord.Embed(
                 description=f"**Reden:** {reason}\n**Duratie:** {days}d {hours}u {minutes}m",
-                color=embed_color
+                color=embedcolor
             )
             premute_embed.set_author(name=f"{member} is tijdelijk gemute!", icon_url=member.avatar_url)
             await ctx.send(embed=premute_embed)
 
             log_channel = self.client.get_channel(561243076450975754)
             mute_embed = discord.Embed(
-                color=embed_color,
+                color=embedcolor,
                 timestamp=datetime.datetime.utcnow()
             )
             mute_embed.add_field(name="Gebruiker", value=f"**Naam:**\t{member.mention}\n**ID:**\t{member.id}",
@@ -60,7 +47,7 @@ class Tempmute(commands.Cog):
             mute_embed.add_field(name="Reden", value=f"{reason}", inline=False)
             mute_embed.add_field(name="Duur", value=f"{days}d {hours}u {minutes}m", inline=False)
             mute_embed.set_author(name=f"[TEMPMUTE] {member}", icon_url=member.avatar_url)
-            mute_embed.set_footer(text=embed_footer)
+            mute_embed.set_footer(text=footer)
             await log_channel.send(embed=mute_embed)
 
             await asyncio.sleep(duration)
@@ -71,7 +58,7 @@ class Tempmute(commands.Cog):
 
                 log_channel = self.client.get_channel(561243076450975754)
                 unmute_embed = discord.Embed(
-                    color=embed_color,
+                    color=embedcolor,
                     timestamp=datetime.datetime.utcnow()
                 )
                 unmute_embed.add_field(name="Gebruiker", value=f"**Naam:**\t{member.mention}\n**ID:**\t{member.id}",
@@ -79,13 +66,13 @@ class Tempmute(commands.Cog):
                 unmute_embed.add_field(name="Moderator",
                                        value=f"**Naam:**\t{ctx.author.mention}\n**ID:**\t{ctx.author.id}", inline=True)
                 unmute_embed.set_author(name=f"[UNMUTE] {member}", icon_url=member.avatar_url)
-                unmute_embed.set_footer(text=embed_footer)
+                unmute_embed.set_footer(text=footer)
                 await log_channel.send(embed=unmute_embed)
 
     @tempmute.error
     async def tempmute_error(self, ctx, error):
-        if isinstance(error, MissingPermissions):
-            return
+        if isinstance(error, commands.MissingPermissions):
+            pass
 
 
 def setup(client):
