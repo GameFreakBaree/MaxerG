@@ -1,5 +1,6 @@
 from discord.ext import commands
 import random
+from settings import minigame_channels
 
 
 class Facts(commands.Cog):
@@ -9,8 +10,7 @@ class Facts(commands.Cog):
 
     @commands.command(aliases=["fact", "random-facts", "feit", "feiten"])
     async def facts(self, ctx):
-        command_channels = ["🎨│minigames", "🔒│bots"]
-        if str(ctx.channel) in command_channels:
+        if str(ctx.channel) in minigame_channels:
             t = ["-89,2 °C de laagste buitentemperatuur ooit gemeten is?",
                  "57,7 °C de hoogste buitentemperatuur ooit gemeten is?", "alleen vrouwelijke muggen steken?",
                  "als je een goudvis in een donkere kamer opsluit, hij wit wordt?",
@@ -51,7 +51,7 @@ class Facts(commands.Cog):
                  "het bekende spel “Tetris” in 14 dagen is gemaakt?",
                  "het grootste zwembad ter wereld wel 1013 meter lang is?",
                  "het hart bij de mens in het midden van de borstkas zit en niet links?",
-                 "het langste woord dat je kunt typen op de linkerhelft van je tobo Verbeteraarsters is?",
+                 "het langste woord dat je kunt typen op de linkerhelft van je toetsenbord Verbeteraarsters is?",
                  "het langste woord dat je met de bovenste rij letters kunt maken topprioriteit is?",
                  "het oog van een struisvogel groter is dan zijn hersens?",
                  "het woord ‘van’ de meeste betekenissen heeft?",
