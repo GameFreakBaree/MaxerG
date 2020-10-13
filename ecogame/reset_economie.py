@@ -1,21 +1,9 @@
 import asyncio
 import discord
 from discord.ext import commands
-import json
 import datetime
 import mysql.connector
-
-with open('./config.json', 'r', encoding='utf-8') as read_settings:
-    settings = json.load(read_settings)
-
-host = settings['host']
-user = settings['user']
-password = settings['password']
-database = settings['database']
-embedcolor = settings['embedcolor']
-embed_footer = settings['footer']
-read_settings.close()
-embed_color = int(embedcolor, 16)
+from settings import host, user, password, database, embedcolor, footer, ecogame_channels
 
 
 class EcoResetMoney(commands.Cog):
@@ -23,17 +11,17 @@ class EcoResetMoney(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command(name="reset-money")
-    async def reset_money(self, ctx):
-        ecogame_channels = ["💰│economy-game", "🔒│bots"]
+    @commands.command(name="reset-economie")
+    @commands.cooldown(1, 30, commands.BucketType.user)
+    async def reset_economie(self, ctx):
         if str(ctx.channel) in ecogame_channels:
             em = discord.Embed(
-                description=f"Wil je al je geld resetten? Type ` Ja ` als je al je geld wilt resetten.",
-                color=embed_color,
+                description=f"Wil je al je voortgang resetten? Type ` Ja `.",
+                color=embedcolor,
                 timestamp=datetime.datetime.utcnow()
             )
             em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-            em.set_footer(text=embed_footer)
+            em.set_footer(text=footer)
             embed = await ctx.send(embed=em)
 
             def check(message):
@@ -45,32 +33,41 @@ class EcoResetMoney(commands.Cog):
                 db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
                 maxergdb_cursor = db_maxerg.cursor()
 
-                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = 0 WHERE user_id = {ctx.author.id}")
-                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET bank = 0 WHERE user_id = {ctx.author.id}")
-                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = 0 WHERE user_id = {ctx.author.id}")
+                maxergdb_cursor.execute(f"DELETE FROM maxerg_economie WHERE user_id = {ctx.author.id}")
                 db_maxerg.commit()
-
                 db_maxerg.close()
 
                 em = discord.Embed(
-                    description=f"Je hebt al je geld gereset!",
-                    color=embed_color,
+                    description=f"Je hebt al je voortgang gereset!",
+                    color=embedcolor,
                     timestamp=datetime.datetime.utcnow()
                 )
                 em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-                em.set_footer(text=embed_footer)
+                em.set_footer(text=footer)
                 await embed.edit(embed=em)
             except asyncio.TimeoutError:
                 em = discord.Embed(
                     description="Geen reactie gekregen. Probeer het opnieuw.",
-                    color=embed_color,
+                    color=embedcolor,
                     timestamp=datetime.datetime.utcnow()
                 )
                 em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-                em.set_footer(text=embed_footer)
+                em.set_footer(text=footer)
                 await embed.edit(embed=em)
+        else:
+            await ctx.send("Deze command werkt alleen in <#708055327958106164>.")
 
-
+    @reset_economie.error
+    async def reset_economie_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            em = discord.Embed(
+                description=f"<:error:725030739531268187> Je moet {error.retry_after} seconden wachten om deze command opnieuw te gebruiken.",
+                color=embedcolor,
+                timestamp=datetime.datetime.utcnow()
+            )
+            em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
+            em.set_footer(text=footer)
+            await ctx.send(embed=em)
 
 
 def setup(client):
