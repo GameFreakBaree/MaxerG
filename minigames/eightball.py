@@ -1,5 +1,6 @@
 from discord.ext import commands
 import random
+from settings import minigame_channels
 
 
 class EightBall(commands.Cog):
@@ -9,8 +10,7 @@ class EightBall(commands.Cog):
 
     @commands.command(aliases=["8ball"])
     async def eightball(self, ctx, *, question=None):
-        command_channels = ["🎨│minigames", "🔒│bots"]
-        if str(ctx.channel) in command_channels:
+        if str(ctx.channel) in minigame_channels:
             if question is None:
                 await ctx.send("Waar heb je 8ball nodig voor?")
             else:
