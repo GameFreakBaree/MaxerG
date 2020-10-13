@@ -1,4 +1,6 @@
 from discord.ext import commands
+import mysql.connector
+from settings import host, user, password, database
 
 
 class OnJoin(commands.Cog):
@@ -11,8 +13,13 @@ class OnJoin(commands.Cog):
         stats_channel = self.client.get_channel(640341412306485251)
         guild_ids = stats_channel.guild
 
-        log_channel = self.client.get_channel(736725990340034591)
-        await log_channel.send(f"<:error:725030739531268187> {member} is geleaved!")
+        db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+        maxergdb_cursor = db_maxerg.cursor()
+
+        maxergdb_cursor.execute(f"DELETE FROM maxerg_economie WHERE user_id = {member.id}")
+        maxergdb_cursor.execute(f"DELETE FROM maxerg_levels WHERE user_id = {member.id}")
+        db_maxerg.commit()
+        db_maxerg.close()
 
         await stats_channel.edit(name=f"Spelers: {guild_ids.member_count}")
 
