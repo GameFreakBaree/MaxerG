@@ -1,25 +1,10 @@
 import discord
 from discord.ext import commands
-import json
-import random
-from random import randint
 import time
+from random import randint
 import datetime
 import mysql.connector
-
-with open('./config.json', 'r', encoding='utf-8') as read_settings:
-    settings = json.load(read_settings)
-
-host = settings['host']
-user = settings['user']
-password = settings['password']
-database = settings['database']
-currency = settings['currency']
-embedcolor = settings['embedcolor']
-embed_footer = settings['footer']
-read_settings.close()
-
-embed_color = int(embedcolor, 16)
+from settings import host, user, password, database, embedcolor, footer, currency, ecogame_channels
 
 
 class EcoWork(commands.Cog):
@@ -30,62 +15,103 @@ class EcoWork(commands.Cog):
     @commands.command()
     @commands.cooldown(1, 3600, commands.BucketType.user)
     async def work(self, ctx):
-        minigame_channels = ["💰│economy-game", "🔒│bots"]
-        if str(ctx.channel) in minigame_channels:
-            loon = randint(6, 25)
-            loon_cast = int(loon)
-
+        if str(ctx.channel) in ecogame_channels:
             db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
             maxergdb_cursor = db_maxerg.cursor()
 
-            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = cash + {loon_cast} WHERE user_id = {ctx.author.id}")
-            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto + {loon_cast} WHERE user_id = {ctx.author.id}")
-            db_maxerg.commit()
+            maxergdb_cursor.execute(f"SELECT * FROM maxerg_economie WHERE user_id = {ctx.author.id}")
+            eco_data = maxergdb_cursor.fetchone()
+            current_job = eco_data[5]
+            last_work_time = eco_data[6]
+            risico = eco_data[7]
 
+            doorgaan = True
+            loon = 0
+
+            if current_job == "werkloos":
+                doorgaan = False
+            elif current_job == "mcdonalds werker":
+                loon = 80
+            elif current_job == "leerkracht":
+                loon = 120
+            elif current_job == "bouwvakker":
+                loon = 150
+            elif current_job == "politie agent":
+                loon = 190
+            elif current_job == "developer":
+                loon = 240
+            elif current_job == "youtuber":
+                loon = 280
+            elif current_job == "dokter":
+                loon = 330
+            elif current_job == "advocaat":
+                loon = 390
+            elif current_job == "rechter":
+                loon = 440
+            elif current_job == "president":
+                loon = 500
+            else:
+                doorgaan = False
+
+            if doorgaan:
+                current_time = datetime.datetime.utcnow()
+                tijd = current_time - last_work_time
+                last_work = current_time.strftime("%Y-%m-%d %H:%M:%S")
+                if tijd.total_seconds() > 86400 and current_job != "mcdonalds werker":
+                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET job = %s WHERE user_id = %s", ("werkloos", ctx.author.id))
+                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET risico = %s WHERE user_id = %s", (104, ctx.author.id))
+                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET last_work = %s WHERE user_id = %s", (last_work, ctx.author.id))
+                    db_maxerg.commit()
+
+                    em = discord.Embed(
+                        description=f"Je hebt niet genoeg gewerkt in de afgelopen 24u! Je bent Ontslagen!\nJe hebt een cooldown van `7 dagen` om terug te solliciteren.",
+                        color=embedcolor,
+                        timestamp=datetime.datetime.utcnow()
+                    )
+                    em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
+                    em.set_footer(text=footer)
+                    await ctx.send(embed=em)
+                else:
+                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash + %s WHERE user_id = %s", (loon, ctx.author.id))
+                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET netto = netto + %s WHERE user_id = %s", (loon, ctx.author.id))
+                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET last_work = %s WHERE user_id = %s", (last_work, ctx.author.id))
+                    if 0 < risico < 100:
+                        if risico <= 10:
+                            random_procent = 1
+                        else:
+                            random_procent = randint(1, 3)
+                        maxergdb_cursor.execute(f"UPDATE maxerg_economie SET risico = risico - %s WHERE user_id = %s", (random_procent, ctx.author.id))
+                    db_maxerg.commit()
+
+                    em = discord.Embed(
+                        description=f"{ctx.author.display_name} heeft 1 uur gewerkt en verdiende {currency}{loon}",
+                        color=embedcolor,
+                        timestamp=datetime.datetime.utcnow()
+                    )
+                    em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
+                    em.set_footer(text=footer)
+                    await ctx.send(embed=em)
+            else:
+                await ctx.send("Je hebt geen job. doe `!jobs` om een job te selecteren.")
+                ctx.command.reset_cooldown(ctx)
             db_maxerg.close()
-
-            mogelijke_antwoorden = [f'Je kreeg {currency}{loon_cast} om hamburgers te maken in de McDonalds.',
-                                    f'Je baas betaalde je {currency}{loon_cast} om zijn kantoor te renoveren.',
-                                    f'Je hebt geholpen bij een hand car wash en kreeg {currency}{loon_cast}.',
-                                    f'Je hielp iemand verhuizen. Aan het einde van de dag kreeg je {currency}{loon_cast}.',
-                                    f'Je hebt de router gefixt bij je buren en als beloning gaven ze je {currency}{loon_cast}.',
-                                    f'Je speelde mee in een Minecraft skywars potje en je won {currency}{loon_cast}.',
-                                    f'Door al je items op Hypixel Skyblock te verkopen verdiende je {currency}{loon_cast}.',
-                                    f'Je werkte als een schoonmaker en je kreeg {currency}{loon_cast}.',
-                                    f'Je behaalde goede punten en kreeg {currency}{loon_cast} van je ouders.',
-                                    f'Je bent op Fiverr begonnen en verdiende {currency}{loon_cast} op de eerste dag.']
-            antwoord = random.choice(mogelijke_antwoorden)
-
-            em = discord.Embed(
-                description=f"{antwoord}",
-                color=0x1bd115,
-                timestamp=datetime.datetime.utcnow()
-            )
-            em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-            em.set_footer(text=embed_footer)
-            await ctx.send(embed=em)
+        else:
+            ctx.command.reset_cooldown(ctx)
+            await ctx.send("Deze command werkt alleen in <#708055327958106164>.")
 
     @work.error
     async def work_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
-            cooldown_limit = error.retry_after
-            if cooldown_limit >= 86400:
-                conversion = time.strftime("%#dd %#Hu %#Mm %#Ss", time.gmtime(error.retry_after))
-            elif 3600 <= cooldown_limit < 86400:
-                conversion = time.strftime("%#Hu %#Mm %#Ss", time.gmtime(error.retry_after))
-            else:
-                conversion = time.strftime("%#Mm %#Ss", time.gmtime(error.retry_after))
+            conversion = time.strftime("%#Mm %#Ss", time.gmtime(error.retry_after))
 
             em = discord.Embed(
                 description=f"<:error:725030739531268187> Je moet {conversion} wachten om deze command opnieuw te gebruiken.",
-                color=embed_color,
+                color=embedcolor,
                 timestamp=datetime.datetime.utcnow()
             )
             em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-            em.set_footer(text=embed_footer)
+            em.set_footer(text=footer)
             await ctx.send(embed=em)
-        else:
-            raise error
 
 
 def setup(client):
