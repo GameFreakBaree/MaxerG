@@ -1,5 +1,6 @@
 from discord.ext import commands
 import random
+from settings import minigame_channels
 
 
 class WouldYouRather(commands.Cog):
@@ -9,8 +10,7 @@ class WouldYouRather(commands.Cog):
 
     @commands.command(aliases=["would-you-rather", "wouldyourather", "wil-je-liever", "wiljeliever", "wjl"])
     async def wyr(self, ctx):
-        command_channels = ["🎨│minigames", "🔒│bots"]
-        if str(ctx.channel) in command_channels:
+        if str(ctx.channel) in minigame_channels:
             t = ["de slimste persoon in een groep mensen zijn of de knapste?",
                  "doorgaan met je huidige leven of opnieuw beginnen als dat mogelijk was?", "doof zijn of blind?",
                  "behaard willen zijn of helemaal zonder haren?",
