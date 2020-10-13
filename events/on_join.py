@@ -1,13 +1,6 @@
 import discord
 from discord.ext import commands
-import json
-
-with open('./config.json', 'r', encoding='utf-8') as read_settings:
-    settings = json.load(read_settings)
-
-embed_footer = settings['footer']
-
-read_settings.close()
+from settings import footer
 
 
 class OnJoin(commands.Cog):
@@ -26,15 +19,8 @@ class OnJoin(commands.Cog):
             color=0x00FF00
         )
         embed.set_author(name=member, icon_url=member.avatar_url)
-        embed.set_footer(
-            text=f"{embed_footer} | Speler #{guild_ids.member_count}",
-            icon_url=self.client.user.avatar_url
-        )
+        embed.set_footer(text=f"{footer} | Speler #{guild_ids.member_count}", icon_url=self.client.user.avatar_url)
         await join_channel.send(embed=embed)
-
-        log_channel = self.client.get_channel(736725990340034591)
-        await log_channel.send(f"<:check:725030739543982240> {member} is gejoined!")
-
         await stats_channel.edit(name=f"Spelers: {guild_ids.member_count}")
 
 
