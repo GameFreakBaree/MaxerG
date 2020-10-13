@@ -1,53 +1,42 @@
 import discord
 from discord.ext import commands
-import json
 from discord.ext.commands import BadArgument
 from discord.utils import get
 import mysql.connector
+from settings import host, user, password, database, embedcolor, footer
 
-with open('./config.json', 'r', encoding='utf-8') as read_settings:
-    settings = json.load(read_settings)
-
-host = settings['host']
-user = settings['user']
-password = settings['password']
-database = settings['database']
-embedcolor = settings['embedcolor']
-embed_footer = settings['footer']
-read_settings.close()
-embed_color = int(embedcolor, 16)
+emote_list = ['1️⃣', '2️⃣', '3️⃣']
 
 
-async def ticket_create(self, bericht, member, args, db_maxerg, maxergdb_cursor):
+async def ticket_create(self, bericht, member, db_maxerg, maxergdb_cursor, reactie):
     await self.client.wait_until_ready()
 
-    if args is None:
-        message_content = "Niet Vermeld"
+    if reactie == "2️⃣":
+        reden = "Staff Sollicitatie"
+    elif reactie == "3️⃣":
+        reden = "Partner Aanvraag"
     else:
-        message_content = f"{args}"
+        reden = "Algemeen"
 
     maxergdb_cursor.execute("SELECT ticket_nr FROM maxerg_ticket_config")
     ticket_nr = maxergdb_cursor.fetchone()
     ticket_number = ticket_nr[0]
     ticket_number += 1
 
-    sql_ticketnr = f"UPDATE maxerg_ticket_config SET ticket_nr = {ticket_number} WHERE ticket_nr = {ticket_number - 1}"
-    maxergdb_cursor.execute(sql_ticketnr)
+    maxergdb_cursor.execute(f"UPDATE maxerg_ticket_config SET ticket_nr = {ticket_number} WHERE ticket_nr = {ticket_number - 1}")
     db_maxerg.commit()
 
     ticket_cat = "▬▬ Tickets ▬▬"
     ticket_category = get(bericht.guild.categories, name=ticket_cat)
 
-    ticket_channel = await bericht.guild.create_text_channel(f"ticket-{ticket_number:04}",
-                                                             category=ticket_category,
-                                                             topic=f"Reden: {message_content}")
-    await ticket_channel.set_permissions(bericht.guild.get_role(bericht.guild.id), send_messages=False,
-                                         read_messages=False)
+    ticket_channel = await bericht.guild.create_text_channel(f"ticket-{ticket_number:04}", category=ticket_category, topic=f"Reden: {reden}")
+    await ticket_channel.set_permissions(bericht.guild.get_role(bericht.guild.id), send_messages=False, read_messages=False)
 
-    role = bericht.guild.get_role(721050870590210149)
-    await ticket_channel.set_permissions(role, send_messages=True, read_messages=True, add_reactions=True,
-                                         embed_links=True, attach_files=True, read_message_history=True,
-                                         external_emojis=True)
+    if reactie == "one":
+        role = bericht.guild.get_role(721050870590210149)
+        await ticket_channel.set_permissions(role, send_messages=True, read_messages=True, add_reactions=True,
+                                             embed_links=True, attach_files=True, read_message_history=True,
+                                             external_emojis=True)
 
     await ticket_channel.set_permissions(member, send_messages=True, read_messages=True, add_reactions=True,
                                          embed_links=True, attach_files=True, read_message_history=True,
@@ -56,14 +45,25 @@ async def ticket_create(self, bericht, member, args, db_maxerg, maxergdb_cursor)
     ticket_embed = discord.Embed(
         description=f"Bedankt voor het maken van een ticket! We zullen zo snel mogelijk antwoorden.\n"
                     f"Tag ons niet want dat vertraagd het antwoorden alleen maar.\n\n"
-                    f"Ticket Eigenaar: {member.mention}\n**Reden:** {message_content}",
-        color=embed_color
+                    f"Ticket Eigenaar: {member.mention}\n**Reden:** {reden}",
+        color=embedcolor
     )
     ticket_embed.add_field(name="Ticket Commands", value="!add <naam>\n!remove <naam>\n!close", inline=False)
     ticket_embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
     ticket_embed.set_thumbnail(url=member.avatar_url)
-    ticket_embed.set_footer(text=embed_footer)
+    ticket_embed.set_footer(text=footer)
     await ticket_channel.send(embed=ticket_embed)
+
+    if reactie == "2️⃣":
+        await ticket_channel.send("Voltooi deze stappen om een kans te maken op een staff positie:"
+                                  "\n\n**1.** Vul **<https://jobs.maxerg.net/>** in."
+                                  "\n**2.** Geef een paar datums en tijden mee wanneer je op sollicitatie gesprek kan."
+                                  "\n**3.** Bereidt je voor op een goed sollicitatie gesprek.")
+    elif reactie == "3️⃣":
+        await ticket_channel.send("Voltooi deze stappen om een kans te maken op een partnership:"
+                                  "\n\n**1.** Meer dan 75 MENSEN in je discord server hebben."
+                                  "\n**2.** Stuur een PERMANENTE link van je discord server."
+                                  "\n**3.** Vertel waarom je een partnership wilt aangaan.")
 
     sql_ids = f"INSERT INTO maxerg_tickets (ticket_channel_ids, ticket_member_ids) VALUES (%s, %s)"
     record = (f"{ticket_channel.id}", f"{member.id}")
@@ -77,15 +77,41 @@ class Ticket(commands.Cog):
     def __init__(self, client):
         self.client = client
 
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def setup(self, ctx):
+        db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
+        maxergdb_cursor = db_maxerg.cursor()
+
+        await ctx.channel.purge(limit=2)
+        em = discord.Embed(
+            title=f"🎫 Tickets",
+            description=f"Klik op de reacties hieronder om een ticket aan te maken!\n"
+                        f"Kies de gepaste reactie voor jouw ticket.\n\n"
+                        f":one: Algemeen\n"
+                        f":two: Staff Sollicitatie\n"
+                        f":three: Partner Aanvraag",
+            color=embedcolor
+        )
+        em.set_footer(text=footer)
+        embed = await ctx.send(embed=em)
+
+        for emote in emote_list:
+            await embed.add_reaction(emoji=emote)
+
+        maxergdb_cursor.execute(f"UPDATE maxerg_ticket_config SET ticket_message_id = {embed.id}")
+        maxergdb_cursor.execute(f"UPDATE maxerg_ticket_config SET ticket_channel_id = {embed.channel.id}")
+        db_maxerg.commit()
+        db_maxerg.close()
+
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
         maxergdb_cursor = db_maxerg.cursor()
 
         message_id = payload.message_id
-        guild_id = payload.guild_id
-        guild = discord.utils.find(lambda g: g.id == guild_id, self.client.guilds)
-        member = discord.utils.find(lambda m: m.id == payload.user_id, guild.members)
+        member = payload.user_id
+        member = self.client.get_user(member)
 
         maxergdb_cursor.execute("SELECT ticket_message_id FROM maxerg_ticket_config")
         setup_message_id_tuple = maxergdb_cursor.fetchone()
@@ -97,7 +123,7 @@ class Ticket(commands.Cog):
 
         if not member.bot:
             if message_id == setup_message_id:
-                if payload.emoji.name == "check":
+                if payload.emoji.name in emote_list:
                     maxergdb_cursor.execute(f"SELECT ticket_member_ids FROM maxerg_tickets WHERE ticket_member_ids = {member.id}")
                     user_id = maxergdb_cursor.fetchone()
 
@@ -105,60 +131,29 @@ class Ticket(commands.Cog):
                         gebruiker_getinfo = self.client.get_user(member.id)
                         bericht = await self.client.get_channel(setup_channel_id).fetch_message(setup_message_id)
                         await gebruiker_getinfo.send("Je hebt al een ticket open.")
-                        await bericht.remove_reaction(emoji='check:725030739543982240', member=member)
+                        for emote in emote_list:
+                            await bericht.remove_reaction(emoji=emote, member=member)
                     else:
-                        args = None
                         bericht = await self.client.get_channel(setup_channel_id).fetch_message(setup_message_id)
-                        await ticket_create(self, bericht, member, args, db_maxerg, maxergdb_cursor)
-                        await bericht.remove_reaction(emoji='check:725030739543982240', member=member)
+                        await ticket_create(self, bericht, member, db_maxerg, maxergdb_cursor, payload.emoji.name)
+                        for emote in emote_list:
+                            await bericht.remove_reaction(emoji=emote, member=member)
         db_maxerg.close()
-
-    @commands.command(aliases=["ticket"])
-    async def new(self, ctx, *, args=None):
-        command_channels = ["🤖│commands", "🔒│bots"]
-        if str(ctx.channel) in command_channels:
-            db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
-            maxergdb_cursor = db_maxerg.cursor()
-
-            maxergdb_cursor.execute(
-                f"SELECT ticket_member_ids FROM maxerg_tickets WHERE ticket_member_ids = {ctx.author.id}")
-            member_id_list = maxergdb_cursor.fetchone()
-
-            if member_id_list is None:
-                await self.client.wait_until_ready()
-
-                ticket_channel = await ticket_create(self, ctx, ctx.author, args, db_maxerg, maxergdb_cursor)
-
-                embed = discord.Embed(
-                    description=f"Je ticket is aangemaakt! <#{ticket_channel.id}>",
-                    color=embed_color
-                )
-                embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-                embed.set_footer(text=embed_footer)
-                await ctx.send(embed=embed)
-
-            elif ctx.author.id == member_id_list[0]:
-                await ctx.author.send("Je hebt al een ticket open.")
-                await ctx.message.delete()
-            else:
-                print("Error in Ticket Cmd NEW")
-            db_maxerg.close()
 
     @commands.command()
     async def close(self, ctx):
         db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
         maxergdb_cursor = db_maxerg.cursor()
 
-        maxergdb_cursor.execute(
-            f"SELECT ticket_channel_ids FROM maxerg_tickets WHERE ticket_member_ids = {ctx.author.id} AND ticket_channel_ids = {ctx.channel.id}")
+        maxergdb_cursor.execute(f"SELECT * FROM maxerg_tickets WHERE ticket_channel_ids = {ctx.channel.id}")
         channel_id_list = maxergdb_cursor.fetchone()
 
+        staff_role = get(ctx.guild.roles, name="TicketStaff")
         if channel_id_list is not None:
-            if ctx.channel.id == channel_id_list[0]:
+            if staff_role in ctx.author.roles or ctx.author.id == channel_id_list[1]:
                 await ctx.channel.delete()
 
-                drop_sql_tickets = f"DELETE FROM maxerg_tickets WHERE ticket_member_ids = {ctx.author.id} AND ticket_channel_ids = {ctx.channel.id}"
-                maxergdb_cursor.execute(drop_sql_tickets)
+                maxergdb_cursor.execute(f"DELETE FROM maxerg_tickets WHERE ticket_channel_ids = {ctx.channel.id}")
                 db_maxerg.commit()
         db_maxerg.close()
 
@@ -167,55 +162,53 @@ class Ticket(commands.Cog):
         db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
         maxergdb_cursor = db_maxerg.cursor()
 
-        maxergdb_cursor.execute(
-            f"SELECT ticket_channel_ids FROM maxerg_tickets WHERE ticket_member_ids = {ctx.author.id} AND ticket_channel_ids = {ctx.channel.id}")
+        maxergdb_cursor.execute(f"SELECT ticket_channel_ids FROM maxerg_tickets WHERE ticket_channel_ids = {ctx.channel.id}")
         channel_id_list = maxergdb_cursor.fetchone()
-
-        if channel_id_list is not None:
-            if ctx.channel.id == channel_id_list[0]:
-                ticket_channel = ctx.message.channel
-                await ticket_channel.set_permissions(
-                    member, send_messages=True, read_messages=True, add_reactions=True, embed_links=True,
-                    attach_files=True, read_message_history=True, external_emojis=True
-                )
-
-                ticket_embed = discord.Embed(
-                    description=f"{member.mention} is toegevoegd aan dit ticket!",
-                    color=embed_color
-                )
-                ticket_embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-                ticket_embed.set_thumbnail(url=member.avatar_url)
-                ticket_embed.set_footer(text=embed_footer)
-                await ctx.send(embed=ticket_embed)
         db_maxerg.close()
+
+        staff_role = get(ctx.guild.roles, name="TicketStaff")
+        if channel_id_list is not None:
+            if staff_role in ctx.author.roles or ctx.author.id == channel_id_list[1]:
+                if ctx.channel.id == channel_id_list[0]:
+                    ticket_channel = ctx.message.channel
+                    await ticket_channel.set_permissions(member, send_messages=True, read_messages=True,
+                                                         add_reactions=True, embed_links=True, attach_files=True,
+                                                         read_message_history=True, external_emojis=True)
+
+                    ticket_embed = discord.Embed(
+                        description=f"{member.mention} is toegevoegd aan dit ticket!",
+                        color=embedcolor
+                    )
+                    ticket_embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
+                    ticket_embed.set_thumbnail(url=member.avatar_url)
+                    ticket_embed.set_footer(text=footer)
+                    await ctx.send(embed=ticket_embed)
 
     @commands.command()
     async def remove(self, ctx, member: discord.Member = None):
         db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
         maxergdb_cursor = db_maxerg.cursor()
 
-        maxergdb_cursor.execute(
-            f"SELECT ticket_channel_ids FROM maxerg_tickets WHERE ticket_member_ids = {ctx.author.id} AND ticket_channel_ids = {ctx.channel.id}")
+        maxergdb_cursor.execute(f"SELECT ticket_channel_ids FROM maxerg_tickets WHERE ticket_channel_ids = {ctx.channel.id}")
         channel_id_list = maxergdb_cursor.fetchone()
-
-        if channel_id_list is not None:
-            if ctx.channel.id == channel_id_list[0]:
-                ticket_channel = ctx.message.channel
-
-                await ticket_channel.set_permissions(member, send_messages=False, read_messages=False,
-                                                     add_reactions=False, embed_links=False, attach_files=False,
-                                                     read_message_history=False, external_emojis=False)
-
-                ticket_embed = discord.Embed(
-                    description=f"{member.mention} is verwijderd van dit ticket!",
-                    color=embed_color
-                )
-                ticket_embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-                ticket_embed.set_thumbnail(url=member.avatar_url)
-                ticket_embed.set_footer(text=embed_footer)
-                await ctx.send(embed=ticket_embed)
-
         db_maxerg.close()
+
+        staff_role = get(ctx.guild.roles, name="TicketStaff")
+        if channel_id_list is not None:
+            if staff_role in ctx.author.roles or ctx.author.id == channel_id_list[1]:
+                if ctx.channel.id == channel_id_list[0]:
+                    ticket_channel = ctx.message.channel
+
+                    await ticket_channel.set_permissions(member, send_messages=False, read_messages=False, add_reactions=False, embed_links=False, attach_files=False, read_message_history=False, external_emojis=False)
+
+                    ticket_embed = discord.Embed(
+                        description=f"{member.mention} is verwijderd van dit ticket!",
+                        color=embedcolor
+                    )
+                    ticket_embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
+                    ticket_embed.set_thumbnail(url=member.avatar_url)
+                    ticket_embed.set_footer(text=footer)
+                    await ctx.send(embed=ticket_embed)
 
     @commands.command()
     async def rename(self, ctx, rename_value=None):
@@ -225,9 +218,9 @@ class Ticket(commands.Cog):
                 db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
                 maxergdb_cursor = db_maxerg.cursor()
 
-                maxergdb_cursor.execute(
-                    f"SELECT ticket_channel_ids FROM maxerg_tickets WHERE ticket_channel_ids = {ctx.channel.id}")
+                maxergdb_cursor.execute(f"SELECT ticket_channel_ids FROM maxerg_tickets WHERE ticket_channel_ids = {ctx.channel.id}")
                 channel_id = maxergdb_cursor.fetchone()
+                db_maxerg.close()
 
                 if channel_id is not None:
                     if ctx.message.channel.id == channel_id[0]:
@@ -238,7 +231,6 @@ class Ticket(commands.Cog):
                         ticket_number = rename_channel_str[-4:]
 
                         await rename_channel.edit(name=f"{rename_value.lower()}-{ticket_number}")
-                db_maxerg.close()
 
     @commands.command(name="force-rename")
     async def force_rename(self, ctx, rename_value=None):
@@ -248,9 +240,9 @@ class Ticket(commands.Cog):
                 db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
                 maxergdb_cursor = db_maxerg.cursor()
 
-                maxergdb_cursor.execute(
-                    f"SELECT ticket_channel_ids FROM maxerg_tickets WHERE ticket_channel_ids = {ctx.channel.id}")
+                maxergdb_cursor.execute(f"SELECT ticket_channel_ids FROM maxerg_tickets WHERE ticket_channel_ids = {ctx.channel.id}")
                 channel_id = maxergdb_cursor.fetchone()
+                db_maxerg.close()
 
                 if channel_id is not None:
                     if ctx.message.channel.id == channel_id[0]:
@@ -258,17 +250,21 @@ class Ticket(commands.Cog):
                         rename_channel = ctx.message.channel
 
                         await rename_channel.edit(name=f"{rename_value.lower()}")
-                db_maxerg.close()
+
+    @setup.error
+    async def setup_error(self, ctx, error):
+        if isinstance(error, commands.MissingPermissions):
+            pass
 
     @add.error
     async def add_error(self, ctx, error):
         if isinstance(error, BadArgument):
             embed = discord.Embed(
                 description="**Error!** De opgegeven gebruiker is niet gevonden.",
-                color=embed_color
+                color=embedcolor
             )
             embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-            embed.set_footer(text=embed_footer)
+            embed.set_footer(text=footer)
             await ctx.send(embed=embed)
 
     @remove.error
@@ -276,10 +272,10 @@ class Ticket(commands.Cog):
         if isinstance(error, BadArgument):
             embed = discord.Embed(
                 description="**Error!** De opgegeven gebruiker is niet gevonden.",
-                color=embed_color
+                color=embedcolor
             )
             embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-            embed.set_footer(text=embed_footer)
+            embed.set_footer(text=footer)
             await ctx.send(embed=embed)
 
 
