@@ -1,20 +1,7 @@
 import discord
 import datetime
-import json
 from discord.ext import commands
-from discord.ext.commands import MissingPermissions
-
-with open('./config.json', 'r', encoding='utf-8') as read_settings:
-    settings = json.load(read_settings)
-
-host = settings['host']
-user = settings['user']
-password = settings['password']
-database = settings['database']
-embedcolor = settings['embedcolor']
-embed_footer = settings['footer']
-read_settings.close()
-embed_color = int(embedcolor, 16)
+from settings import footer, embedcolor
 
 
 class Ban(commands.Cog):
@@ -32,7 +19,7 @@ class Ban(commands.Cog):
 
             preban_embed = discord.Embed(
                 description=f"**Reden:** {reason}",
-                color=embed_color
+                color=embedcolor
             )
             preban_embed.set_image(url="https://media1.tenor.com/images/de413d89fff5502df7cff9f68b24dca5/tenor.gif?itemid=12850590")
             preban_embed.set_author(name=f"{member} is verbannen!", icon_url=member.avatar_url)
@@ -40,7 +27,7 @@ class Ban(commands.Cog):
 
             log_channel = self.client.get_channel(561243076450975754)
             ban_embed = discord.Embed(
-                color=embed_color,
+                color=embedcolor,
                 timestamp=datetime.datetime.utcnow()
             )
             ban_embed.add_field(name="Gebruiker", value=f"**Naam:**\t{member.mention}\n**ID:**\t{member.id}",
@@ -50,13 +37,13 @@ class Ban(commands.Cog):
             ban_embed.add_field(name="Reden", value=f"{reason}", inline=False)
             ban_embed.add_field(name="Duur", value=f"∞", inline=False)
             ban_embed.set_author(name=f"[BAN] {member}", icon_url=member.avatar_url)
-            ban_embed.set_footer(text=embed_footer[0])
+            ban_embed.set_footer(text=footer)
             await log_channel.send(embed=ban_embed)
 
     @ban.error
     async def ban_error(self, ctx, error):
-        if isinstance(error, MissingPermissions):
-            return
+        if isinstance(error, commands.MissingPermissions):
+            pass
 
 
 def setup(client):
