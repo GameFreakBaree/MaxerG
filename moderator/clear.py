@@ -1,21 +1,8 @@
 import time
 import discord
 import datetime
-import json
 from discord.ext import commands
-from discord.ext.commands import MissingPermissions
-
-with open('./config.json', 'r', encoding='utf-8') as read_settings:
-    settings = json.load(read_settings)
-
-host = settings['host']
-user = settings['user']
-password = settings['password']
-database = settings['database']
-embedcolor = settings['embedcolor']
-embed_footer = settings['footer']
-read_settings.close()
-embed_color = int(embedcolor, 16)
+from settings import footer, embedcolor
 
 
 class Clear(commands.Cog):
@@ -50,7 +37,7 @@ class Clear(commands.Cog):
 
             log_channel = self.client.get_channel(561243076450975754)
             clear_embed = discord.Embed(
-                color=embed_color,
+                color=embedcolor,
                 timestamp=datetime.datetime.utcnow()
             )
             clear_embed.add_field(name="Moderator", value=f"**Naam:**\t{ctx.author.mention}\n**ID:**\t{ctx.author.id}",
@@ -58,13 +45,13 @@ class Clear(commands.Cog):
             clear_embed.add_field(name="Aantal Berichten", value=f"{amount}", inline=True)
             clear_embed.add_field(name="Channel", value=f"{ctx.channel.mention}", inline=True)
             clear_embed.set_author(name=f"[CLEAR] {ctx.author}", icon_url=ctx.author.avatar_url)
-            clear_embed.set_footer(text=embed_footer)
+            clear_embed.set_footer(text=footer)
             await log_channel.send(embed=clear_embed)
 
     @clear.error
     async def clear_error(self, ctx, error):
-        if isinstance(error, MissingPermissions):
-            return
+        if isinstance(error, commands.MissingPermissions):
+            pass
 
 
 def setup(client):
