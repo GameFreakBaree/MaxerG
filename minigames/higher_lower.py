@@ -1,21 +1,11 @@
 import discord
 from discord.ext import commands
-import json
 from random import randint
 import mysql.connector
+from settings import host, user, password, database, embedcolor, footer, currency
 
-with open('./config.json', 'r', encoding='utf-8') as read_settings:
-    settings = json.load(read_settings)
-
-host = settings['host']
-user = settings['user']
-password = settings['password']
-database = settings['database']
-embedcolor = settings['embedcolor']
-embed_footer = settings['footer']
-read_settings.close()
-
-embed_color = int(embedcolor, 16)
+min_getal = 1
+max_getal = 100000
 
 
 class HigherLower(commands.Cog):
@@ -45,39 +35,42 @@ class HigherLower(commands.Cog):
                     try:
                         message_inhoud = int(message.content)
 
-                        maxergdb_cursor.execute(f"UPDATE maxerg_higherlower SET last_user_id = {message.author.id}")
-                        db_maxerg.commit()
-
-                        higher_emote = "🔼"
-                        lower_emote = "🔽"
-                        check_emote = "✅"
-
-                        if message_inhoud > luckynumber:
-                            await message.add_reaction(emoji=lower_emote)
-                        elif message_inhoud < luckynumber:
-                            await message.add_reaction(emoji=higher_emote)
-                        elif message_inhoud == luckynumber:
-                            await message.add_reaction(emoji=check_emote)
-
-                            random_money = randint(10, 30)
-
-                            embed = discord.Embed(
-                                title="Nummer Geraden!",
-                                description=f"**{message.author.display_name}** heeft het nummer geraden!"
-                                            f"\nJe hebt €{random_money} gekregen.",
-                                color=embed_color
-                            )
-                            embed.set_footer(text=embed_footer)
-                            await message.channel.send(embed=embed)
-
-                            random_number = randint(1, 100000)
-
-                            maxergdb_cursor.execute(f"UPDATE maxerg_higherlower SET random_number = {random_number}")
-                            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = cash + {random_money} WHERE user_id = {message.author.id}")
-                            maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto + {random_money} WHERE user_id = {message.author.id}")
-                            db_maxerg.commit()
+                        if message_inhoud > max_getal:
+                            await message.channel.purge(limit=1)
+                        elif message_inhoud < min_getal:
+                            await message.channel.purge(limit=1)
                         else:
-                            print("error in hoger lager")
+                            maxergdb_cursor.execute(f"UPDATE maxerg_higherlower SET last_user_id = {message.author.id}")
+                            db_maxerg.commit()
+
+                            higher_emote = "🔼"
+                            lower_emote = "🔽"
+                            check_emote = "✅"
+
+                            if message_inhoud > luckynumber:
+                                await message.add_reaction(emoji=lower_emote)
+                            elif message_inhoud < luckynumber:
+                                await message.add_reaction(emoji=higher_emote)
+                            elif message_inhoud == luckynumber:
+                                await message.add_reaction(emoji=check_emote)
+
+                                random_money = randint(50, 100)
+
+                                embed = discord.Embed(
+                                    title="Nummer Geraden!",
+                                    description=f"**{message.author.display_name}** heeft het nummer geraden!"
+                                                f"\nJe hebt {currency}{random_money} gekregen.",
+                                    color=embedcolor
+                                )
+                                embed.set_footer(text=footer)
+                                await message.channel.send(embed=embed)
+
+                                random_number = randint(min_getal, max_getal)
+
+                                maxergdb_cursor.execute(f"UPDATE maxerg_higherlower SET random_number = {random_number}")
+                                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = cash + {random_money} WHERE user_id = {message.author.id}")
+                                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto + {random_money} WHERE user_id = {message.author.id}")
+                                db_maxerg.commit()
                     except ValueError:
                         await message.channel.purge(limit=1)
                 db_maxerg.close()
