@@ -7,6 +7,8 @@ from settings import host, user, password, database, embedcolor, footer, currenc
 min_getal = 1
 max_getal = 100000
 
+vorige_id = 0
+
 
 class HigherLower(commands.Cog):
 
@@ -18,16 +20,13 @@ class HigherLower(commands.Cog):
         if message.author.bot is False:
             hl_channels = ["✨│hoger-lager"]
             if str(message.channel) in hl_channels:
+                global vorige_id
                 db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
                 maxergdb_cursor = db_maxerg.cursor()
 
                 maxergdb_cursor.execute("SELECT random_number FROM maxerg_higherlower")
                 luckynumber_tuple = maxergdb_cursor.fetchone()
                 luckynumber = int(luckynumber_tuple[0])
-
-                maxergdb_cursor.execute("SELECT last_user_id FROM maxerg_higherlower")
-                vorige_id_tuple = maxergdb_cursor.fetchone()
-                vorige_id = int(vorige_id_tuple[0])
 
                 if message.author.id == vorige_id:
                     await message.channel.purge(limit=1)
@@ -40,8 +39,7 @@ class HigherLower(commands.Cog):
                         elif message_inhoud < min_getal:
                             await message.channel.purge(limit=1)
                         else:
-                            maxergdb_cursor.execute(f"UPDATE maxerg_higherlower SET last_user_id = {message.author.id}")
-                            db_maxerg.commit()
+                            vorige_id = message.author.id
 
                             higher_emote = "🔼"
                             lower_emote = "🔽"
