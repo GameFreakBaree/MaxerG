@@ -4,9 +4,9 @@ import os
 import discord
 from discord.ext import commands, tasks
 import mysql.connector
-from settings import host, user, password, database, token, bot_name, folder_list, embedcolor, footer
+from settings import host, user, password, database, token, bot_name, folder_list, prefix
 
-client = commands.Bot(command_prefix='!', case_insensitive=True)
+client = commands.Bot(command_prefix=prefix, case_insensitive=True)
 client.remove_command("help")
 
 
@@ -55,16 +55,6 @@ async def check_jobs():
         print("0 players lost there jobs.\n")
     else:
         print(f"{counter} players lost there jobs.\n")
-
-        ecogame = client.get_channel(746839771803811902)
-        embed = discord.Embed(
-            title="Jobs Controle...",
-            description=message,
-            color=embedcolor
-        )
-        embed.set_author(name=client.user.display_name, icon_url=client.user.avatar_url)
-        embed.set_footer(text=footer)
-        await ecogame.send(embed=embed)
     await asyncio.sleep(86395)
 
 for folder in folder_list:
