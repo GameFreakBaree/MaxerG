@@ -15,10 +15,13 @@ class CoreReload(commands.Cog):
                 if types.lower() in folder_list:
                     if extension == "*":
                         for filenames in os.listdir(f'./{types}'):
-                            if filenames.endswith('.py'):
-                                print(f"Reload {filenames[:-3]}, by {ctx.author}")
-                                self.client.unload_extension(f'{types}.{filenames[:-3]}')
-                                self.client.load_extension(f'{types}.{filenames[:-3]}')
+                            try:
+                                if filenames.endswith('.py'):
+                                    print(f"Reload {filenames[:-3]}, by {ctx.author}")
+                                    self.client.unload_extension(f'{types}.{filenames[:-3]}')
+                                    self.client.load_extension(f'{types}.{filenames[:-3]}')
+                            except Exception:
+                                pass
                         await ctx.send(f"Reloaded all extensions in {types}, succes!")
                     else:
                         self.client.unload_extension(f'{types}.{extension}')
