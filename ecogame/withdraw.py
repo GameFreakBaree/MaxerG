@@ -11,7 +11,6 @@ class EcoWithdraw(commands.Cog):
         self.client = client
 
     @commands.command(aliases=["with"])
-    @commands.cooldown(1, 20, commands.BucketType.user)
     async def withdraw(self, ctx, amount=None):
         if str(ctx.channel) in ecogame_channels:
             if amount is not None:
@@ -37,8 +36,7 @@ class EcoWithdraw(commands.Cog):
                         timestamp=datetime.datetime.utcnow()
                     )
                 else:
-                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET bank = bank - {amount} WHERE user_id = {ctx.author.id}")
-                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash + {amount} WHERE user_id = {ctx.author.id}")
+                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET bank = bank - {amount}, cash = cash + {amount} WHERE user_id = {ctx.author.id}")
                     db_maxerg.commit()
 
                     em = discord.Embed(
@@ -52,19 +50,6 @@ class EcoWithdraw(commands.Cog):
                 db_maxerg.close()
         else:
             await ctx.send("Deze command werkt alleen in <#708055327958106164>.")
-            ctx.command.reset_cooldown(ctx)
-
-    @withdraw.error
-    async def withdraw_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            em = discord.Embed(
-                description=f"<:error:725030739531268187> Je moet {round(error.retry_after, 1)} seconden wachten om deze command opnieuw te gebruiken.",
-                color=embedcolor,
-                timestamp=datetime.datetime.utcnow()
-            )
-            em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-            em.set_footer(text=footer)
-            await ctx.send(embed=em)
 
 
 def setup(client):
