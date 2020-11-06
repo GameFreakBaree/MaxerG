@@ -5,7 +5,7 @@ from random import randint
 import time
 import datetime
 import mysql.connector
-from settings import host, user, password, database, footer, currency, ecogame_channels, embedcolor
+from settings import host, user, password, database, footer, currency, ecogame_channels, errorcolor
 
 
 class EcoRob(commands.Cog):
@@ -14,7 +14,7 @@ class EcoRob(commands.Cog):
         self.client = client
 
     @commands.command()
-    @commands.cooldown(1, 86400, commands.BucketType.user)
+    @commands.cooldown(1, 43200, commands.BucketType.user)
     async def rob(self, ctx, *, member: discord.Member = None):
         if str(ctx.channel) in ecogame_channels:
             if member is not None and member != ctx.author:
@@ -25,11 +25,10 @@ class EcoRob(commands.Cog):
                 user_id = maxergdb_cursor.fetchone()
 
                 if user_id is None:
-                    instert_new_user_id = "INSERT INTO maxerg_ecogame (user_id, cash, bank) VALUES (%s, %s, %s)"
-                    lvl_record = (member.id, 0, 0)
-                    maxergdb_cursor.execute(instert_new_user_id, lvl_record)
+                    insert_new_user_id_eco = "INSERT INTO maxerg_economie (user_id, cash, bank, netto, prestige, job, max_bank) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                    ecogame_record = (ctx.author.id, 0, 0, 0, 0, "werkloos", 5000)
+                    maxergdb_cursor.execute(insert_new_user_id_eco, ecogame_record)
                     db_maxerg.commit()
-
                     victem_geld = 0
                 else:
                     maxergdb_cursor.execute(f"SELECT cash FROM maxerg_economie WHERE user_id = {member.id}")
@@ -47,32 +46,26 @@ class EcoRob(commands.Cog):
                     await ctx.send(embed=em)
                 else:
                     failrate = randint(1, 100)
-                    if failrate <= 40:
-                        maxergdb_cursor.execute(f"SELECT risico FROM maxerg_economie WHERE user_id = {ctx.author.id}")
-                        risico = maxergdb_cursor.fetchone()
+                    maxergdb_cursor.execute(f"SELECT * FROM maxerg_inventory WHERE user_id = {ctx.author.id}")
+                    inventory = maxergdb_cursor.fetchone()
+                    slot = inventory[2]
+                    geweer = inventory[3]
 
-                        verlies_job = randint(1, 100)
-                        if verlies_job <= risico[0]:
-                            maxergdb_cursor.execute("UPDATE maxerg_economie SET last_work = %s WHERE user_id = %s", (datetime.datetime.utcnow(), ctx.author.id))
-                            maxergdb_cursor.execute("UPDATE maxerg_economie SET job = %s WHERE user_id = %s", ("werkloos", ctx.author.id))
-                            maxergdb_cursor.execute("UPDATE maxerg_economie SET risico = %s WHERE user_id = %s", (104, ctx.author.id))
+                    if slot == 1:
+                        slot = 10
+                    else:
+                        slot = 0
+                    
+                    if geweer == 1:
+                        geweer = 20
+                    else:
+                        geweer = 0
 
-                            em = discord.Embed(
-                                title="Job Verloren!",
-                                description=f"Je baas is erachter gekomen dat je een crimineel bent. Je bent ontslagen!",
-                                color=embedcolor,
-                                timestamp=datetime.datetime.utcnow()
-                            )
-                            em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-                            em.set_footer(text=footer)
-                            await ctx.send(embed=em)
-                        else:
-                            extra_risico = randint(1, 3)
-                            maxergdb_cursor.execute(f"UPDATE maxerg_economie SET risico = risico + {extra_risico} WHERE user_id = {ctx.author.id}")
+                    percent_bereken = 40 + slot + geweer
 
+                    if failrate <= percent_bereken:
                         random_loon = randint(150, 500)
-                        maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash - {random_loon} WHERE user_id = {ctx.author.id}")
-                        maxergdb_cursor.execute(f"UPDATE maxerg_economie SET netto = netto - {random_loon} WHERE user_id = {ctx.author.id}")
+                        maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash - {random_loon}, netto = netto - {random_loon} WHERE user_id = {ctx.author.id}")
                         db_maxerg.commit()
 
                         mogelijke_antwoorden = [
@@ -92,10 +85,8 @@ class EcoRob(commands.Cog):
                         else:
                             loon = randint(100, cash_member)
 
-                        maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash - {loon} WHERE user_id = {member.id}")
-                        maxergdb_cursor.execute(f"UPDATE maxerg_economie SET netto = netto - {loon} WHERE user_id = {member.id}")
-                        maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash + {loon} WHERE user_id = {ctx.author.id}")
-                        maxergdb_cursor.execute(f"UPDATE maxerg_economie SET netto = netto + {loon} WHERE user_id = {ctx.author.id}")
+                        maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash - {loon}, netto = netto - {loon} WHERE user_id = {member.id}")
+                        maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash + {loon}, netto = netto + {loon} WHERE user_id = {ctx.author.id}")
                         db_maxerg.commit()
 
                         mogelijke_antwoorden = [f"Je hebt {currency}{loon} gestolen van {member.display_name}."]
@@ -112,19 +103,22 @@ class EcoRob(commands.Cog):
                     em.set_footer(text=footer)
                     await ctx.send(embed=em)
                     db_maxerg.close()
+        else:
+            await ctx.send("Deze command werkt alleen in <#708055327958106164>.")
+            ctx.command.reset_cooldown(ctx)
 
     @rob.error
     async def rob_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             cooldown_limit = error.retry_after
             if cooldown_limit >= 3600:
-                conversion = time.strftime("%#Hu %#Mm %#Ss", time.gmtime(error.retry_after))
+                conversion = time.strftime("%-Hu %-Mm %-Ss", time.gmtime(error.retry_after))
             else:
-                conversion = time.strftime("%#Mm %#Ss", time.gmtime(error.retry_after))
+                conversion = time.strftime("%-Mm %-Ss", time.gmtime(error.retry_after))
 
             em = discord.Embed(
                 description=f"<:error:725030739531268187> Je moet {conversion} wachten om deze command opnieuw te gebruiken.",
-                color=embedcolor,
+                color=errorcolor,
                 timestamp=datetime.datetime.utcnow()
             )
             em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
