@@ -12,7 +12,6 @@ class EcoResetMoney(commands.Cog):
         self.client = client
 
     @commands.command(name="reset-economie")
-    @commands.cooldown(1, 30, commands.BucketType.user)
     async def reset_economie(self, ctx):
         if str(ctx.channel) in ecogame_channels:
             em = discord.Embed(
@@ -56,18 +55,6 @@ class EcoResetMoney(commands.Cog):
                 await embed.edit(embed=em)
         else:
             await ctx.send("Deze command werkt alleen in <#708055327958106164>.")
-
-    @reset_economie.error
-    async def reset_economie_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            em = discord.Embed(
-                description=f"<:error:725030739531268187> Je moet {error.retry_after} seconden wachten om deze command opnieuw te gebruiken.",
-                color=embedcolor,
-                timestamp=datetime.datetime.utcnow()
-            )
-            em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-            em.set_footer(text=footer)
-            await ctx.send(embed=em)
 
 
 def setup(client):
