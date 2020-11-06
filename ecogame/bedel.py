@@ -5,7 +5,7 @@ from random import randint
 import time
 import datetime
 import mysql.connector
-from settings import host, user, password, database, embedcolor, footer, currency, ecogame_channels
+from settings import host, user, password, database, footer, currency, ecogame_channels, errorcolor
 
 
 class EcoBedel(commands.Cog):
@@ -14,7 +14,7 @@ class EcoBedel(commands.Cog):
         self.client = client
 
     @commands.command()
-    @commands.cooldown(1, 2700, commands.BucketType.user)
+    @commands.cooldown(1, 1800, commands.BucketType.user)
     async def bedel(self, ctx):
         if str(ctx.channel) in ecogame_channels:
             db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
@@ -23,7 +23,7 @@ class EcoBedel(commands.Cog):
             maxergdb_cursor.execute(f"SELECT prestige FROM maxerg_economie WHERE user_id = {ctx.author.id}")
             prestige = maxergdb_cursor.fetchone()
 
-            if prestige[0] < 2:
+            if prestige[0] <= 2:
                 mogelijke_namen = ["Jonathan", "Siebe", "Max", "Jeff", "Sebastian",
                                    "Bryan", "Pieter", "Bert", "John", "Ben",
                                    "Willem", "Tibo", "Sem", "Daniel", "Cedric",
@@ -31,27 +31,12 @@ class EcoBedel(commands.Cog):
                                    "Elon", "Mark", "Witse", "Jorrit", "Bram"]
                 naam = random.choice(mogelijke_namen)
 
-                failrate = randint(1, 20)
-                if failrate == 8:
-                    loon = randint(30, 80)
-                    loon = int(loon)
+                loon = randint(45, 120)
+                maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash + {loon}, netto = netto + {loon} WHERE user_id = {ctx.author.id}")
+                db_maxerg.commit()
 
-                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash - {loon} WHERE user_id = {ctx.author.id}")
-                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET netto = netto - {loon} WHERE user_id = {ctx.author.id}")
-                    db_maxerg.commit()
-
-                    antwoord = f"{naam} heeft {currency}{loon} genomen van {ctx.author.mention}!"
-                    color_succes_fail = 0xFF0000
-                else:
-                    loon = randint(45, 100)
-                    loon = int(loon)
-
-                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash + {loon} WHERE user_id = {ctx.author.id}")
-                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET netto = netto + {loon} WHERE user_id = {ctx.author.id}")
-                    db_maxerg.commit()
-
-                    antwoord = f"{naam} heeft {currency}{loon} gegeven aan {ctx.author.mention}!"
-                    color_succes_fail = 0x1bd115
+                antwoord = f"{naam} heeft {currency}{loon} gegeven aan {ctx.author.mention}!"
+                color_succes_fail = 0x1bd115
 
                 em = discord.Embed(
                     description=f"{antwoord}",
@@ -71,11 +56,11 @@ class EcoBedel(commands.Cog):
     @bedel.error
     async def bedel_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
-            conversion = time.strftime("%#Mm %#Ss", time.gmtime(error.retry_after))
+            conversion = time.strftime("%-Mm %-Ss", time.gmtime(error.retry_after))
 
             em = discord.Embed(
                 description=f"<:error:725030739531268187> Je moet {conversion} wachten om deze command opnieuw te gebruiken.",
-                color=embedcolor,
+                color=errorcolor,
                 timestamp=datetime.datetime.utcnow()
             )
             em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
