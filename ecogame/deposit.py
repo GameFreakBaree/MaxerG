@@ -11,7 +11,6 @@ class EcoDeposit(commands.Cog):
         self.client = client
 
     @commands.command(aliases=["dep"])
-    @commands.cooldown(1, 10, commands.BucketType.user)
     async def deposit(self, ctx, amount=None):
         if str(ctx.channel) in ecogame_channels and amount is not None:
             db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
@@ -21,7 +20,7 @@ class EcoDeposit(commands.Cog):
             eco_data = maxergdb_cursor.fetchone()
             cash_currently = eco_data[1]
             bank_currently = eco_data[2]
-            bank_max = eco_data[8]
+            bank_max = eco_data[6]
             error_display = False
 
             if cash_currently is None:
@@ -32,6 +31,9 @@ class EcoDeposit(commands.Cog):
                     amount = bank_max-bank_currently
                 else:
                     amount = cash_currently
+
+                if amount <= 0:
+                    error_display = True
             else:
                 amount = int(amount)
 
@@ -49,8 +51,7 @@ class EcoDeposit(commands.Cog):
                     timestamp=datetime.datetime.utcnow()
                 )
             else:
-                maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash - {amount} WHERE user_id = {ctx.author.id}")
-                maxergdb_cursor.execute(f"UPDATE maxerg_economie SET bank = bank + {amount} WHERE user_id = {ctx.author.id}")
+                maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash - {amount}, bank = bank + {amount} WHERE user_id = {ctx.author.id}")
                 db_maxerg.commit()
 
                 em = discord.Embed(
@@ -64,18 +65,6 @@ class EcoDeposit(commands.Cog):
             db_maxerg.close()
         else:
             await ctx.send("Deze command werkt alleen in <#708055327958106164>.")
-
-    @deposit.error
-    async def deposit_error(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            em = discord.Embed(
-                description=f"<:error:725030739531268187> Je moet {round(error.retry_after, 1)} seconden wachten om deze command opnieuw te gebruiken.",
-                color=embedcolor,
-                timestamp=datetime.datetime.utcnow()
-            )
-            em.set_author(name=f"{ctx.author}", icon_url=f"{ctx.author.avatar_url}")
-            em.set_footer(text=footer)
-            await ctx.send(embed=em)
 
 
 def setup(client):
