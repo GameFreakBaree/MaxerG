@@ -3,7 +3,7 @@ import mysql.connector
 from settings import host, user, password, database
 
 
-class OnJoin(commands.Cog):
+class OnLeave(commands.Cog):
 
     def __init__(self, client):
         self.client = client
@@ -25,4 +25,4 @@ class OnJoin(commands.Cog):
 
 
 def setup(client):
-    client.add_cog(OnJoin(client))
+    client.add_cog(OnLeave(client))
