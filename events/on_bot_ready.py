@@ -11,7 +11,7 @@ class OnReady(commands.Cog):
         bot_naam = self.client.user.display_name
         print(f"[{bot_naam}] De bot is succesvol geladen.")
 
-        stats_channel = self.client.get_channel(742705535899533333)
+        stats_channel = self.client.get_channel(640341412306485251)
         guild_ids = stats_channel.guild
         await stats_channel.edit(name=f"Spelers: {guild_ids.member_count}")
 
