@@ -52,7 +52,7 @@ class HigherLower(commands.Cog):
                             elif message_inhoud == luckynumber:
                                 await message.add_reaction(emoji=check_emote)
 
-                                random_money = randint(50, 100)
+                                random_money = randint(80, 200)
 
                                 embed = discord.Embed(
                                     title="Nummer Geraden!",
