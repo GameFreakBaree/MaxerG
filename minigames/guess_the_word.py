@@ -3,7 +3,7 @@ from discord.ext import commands
 import mysql.connector
 import asyncio
 import random
-from settings import host, user, password, database, embedcolor, footer
+from settings import host, user, password, database, embedcolor, footer, currency
 
 t = ["EMPTY"]
 
@@ -35,10 +35,13 @@ class GuessTheWord(commands.Cog):
                 if message.content.lower() == random_word:
                     await message.add_reaction(emoji=check_emote)
 
+                    geld = random.randint(20, 80)
+
                     embed = discord.Embed(
                         title="Woord Geraden!",
                         description=f"**{message.author.display_name}** heeft het woord geraden!"
-                                    f"\n__Woord:__ ` {random_word} `",
+                                    f"\n__Woord:__ ` {random_word} `"
+                                    f"\n\nJe krijgt **{currency}{geld}** om het woord te raden.",
                         color=embedcolor
                     )
                     embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
@@ -50,6 +53,7 @@ class GuessTheWord(commands.Cog):
                     maxergdb_cursor.execute("UPDATE maxerg_guessword SET votes = 0")
                     maxergdb_cursor.execute("UPDATE maxerg_guessword SET vote_one = 0")
                     maxergdb_cursor.execute("UPDATE maxerg_guessword SET vote_two = 0")
+                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash + {geld}, netto = netto + {geld} WHERE user_id = {message.author.id}")
                     db_maxerg.commit()
 
                     async with message.channel.typing():
