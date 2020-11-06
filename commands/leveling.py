@@ -48,19 +48,22 @@ class LevelingSystem(commands.Cog):
                 lvl_start = lvl_start_tuple[0]
 
                 level_up_channel = self.client.get_channel(563347368037056513)
-                lvl_end = int(experience ** (1 / 3.5))
+                lvl_end = int(experience ** (1 / 3.3))  # experience ** (1 / 3.3)
                 if lvl_start < lvl_end:
                     if lvl_end >= 5:
-                        role = get(message.guild.roles, name='LvL.5')
+                        role = get(message.guild.roles, id=714036438659760159)
                         await message.author.add_roles(role)
                     if lvl_end >= 10:
-                        role = get(message.guild.roles, name='LvL.10')
-                        await message.author.add_roles(role)
-                    if lvl_end >= 15:
-                        role = get(message.guild.roles, name='LvL.15')
+                        role = get(message.guild.roles, id=714036464404398094)
                         await message.author.add_roles(role)
                     if lvl_end >= 20:
-                        role = get(message.guild.roles, name='LvL.20')
+                        role = get(message.guild.roles, id=714036480724566057)
+                        await message.author.add_roles(role)
+                    if lvl_end >= 25:
+                        role = get(message.guild.roles, id=714036496960847902)
+                        await message.author.add_roles(role)
+                    if lvl_end >= 30:
+                        role = get(message.guild.roles, id=773957810135760956)
                         await message.author.add_roles(role)
 
                     level_up_embed = discord.Embed(
@@ -82,13 +85,12 @@ class LevelingSystem(commands.Cog):
                 user_id_eco = maxergdb_cursor.fetchone()
 
                 if user_id_eco is None:
-                    insert_new_user_id_eco = "INSERT INTO maxerg_economie (user_id, cash, bank, netto, prestige, job, last_work, risico, max_bank) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-                    ecogame_record = (message.author.id, 0, 0, 0, 0, "werkloos", "2020-09-25 01:01:01", 0, 5000)
+                    insert_new_user_id_eco = "INSERT INTO maxerg_economie (user_id, cash, bank, netto, prestige, job, max_bank) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                    ecogame_record = (message.author.id, 0, 0, 0, 0, "werkloos", 5000)
                     maxergdb_cursor.execute(insert_new_user_id_eco, ecogame_record)
                     db_maxerg.commit()
                 else:
-                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash + {random_money} WHERE user_id = {message.author.id}")
-                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET netto = netto + {random_money} WHERE user_id = {message.author.id}")
+                    maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash + {random_money}, netto = netto + {random_money} WHERE user_id = {message.author.id}")
                     db_maxerg.commit()
                 db_maxerg.close()
 
@@ -109,8 +111,8 @@ class LevelingSystem(commands.Cog):
             db_maxerg.close()
 
             voortgang = round(exp ** (1 / 3.5), 1)
-            oude_voortgang = str(voortgang-int(voortgang)).split('.')[1]
-            oude_voortgang = oude_voortgang[0]
+            oude_voortgang = voortgang % int(voortgang)
+            oude_voortgang = oude_voortgang * 10
             voortgang = int(oude_voortgang) * 2
 
             voortgang_bar = "❚" * voortgang
@@ -119,8 +121,8 @@ class LevelingSystem(commands.Cog):
             rest_bar = "❘" * rest
 
             procent_voortgang = round(exp ** (1 / 3.5), 2)
-            procent_voortgang = str(procent_voortgang-int(procent_voortgang)).split('.')[1]
-            procent = procent_voortgang[0] + procent_voortgang[1]
+            procent_voortgang = procent_voortgang % int(procent_voortgang)
+            procent = round(procent_voortgang * 100)
 
             voortgang = f"{voortgang_bar}{rest_bar} ➼ {procent}%"
 
