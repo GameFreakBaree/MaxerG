@@ -32,8 +32,8 @@ async def ticket_create(self, bericht, member, db_maxerg, maxergdb_cursor, react
     ticket_channel = await bericht.guild.create_text_channel(f"ticket-{ticket_number:04}", category=ticket_category, topic=f"Reden: {reden}")
     await ticket_channel.set_permissions(bericht.guild.get_role(bericht.guild.id), send_messages=False, read_messages=False)
 
-    if reactie == "one":
-        role = bericht.guild.get_role(721050870590210149)
+    if reactie == "1️⃣":
+        role = bericht.guild.get_role(769934897757945927)
         await ticket_channel.set_permissions(role, send_messages=True, read_messages=True, add_reactions=True,
                                              embed_links=True, attach_files=True, read_message_history=True,
                                              external_emojis=True)
@@ -148,7 +148,7 @@ class Ticket(commands.Cog):
         maxergdb_cursor.execute(f"SELECT * FROM maxerg_tickets WHERE ticket_channel_ids = {ctx.channel.id}")
         channel_id_list = maxergdb_cursor.fetchone()
 
-        staff_role = get(ctx.guild.roles, name="TicketStaff")
+        staff_role = get(ctx.guild.roles, name="🔥│Discord Staff")
         if channel_id_list is not None:
             if staff_role in ctx.author.roles or ctx.author.id == channel_id_list[1]:
                 await ctx.channel.delete()
@@ -166,7 +166,7 @@ class Ticket(commands.Cog):
         channel_id_list = maxergdb_cursor.fetchone()
         db_maxerg.close()
 
-        staff_role = get(ctx.guild.roles, name="TicketStaff")
+        staff_role = get(ctx.guild.roles, name="🔥│Discord Staff")
         if channel_id_list is not None:
             if staff_role in ctx.author.roles or ctx.author.id == channel_id_list[1]:
                 if ctx.channel.id == channel_id_list[0]:
@@ -193,13 +193,14 @@ class Ticket(commands.Cog):
         channel_id_list = maxergdb_cursor.fetchone()
         db_maxerg.close()
 
-        staff_role = get(ctx.guild.roles, name="TicketStaff")
+        staff_role = get(ctx.guild.roles, name="🔥│Discord Staff")
         if channel_id_list is not None:
             if staff_role in ctx.author.roles or ctx.author.id == channel_id_list[1]:
                 if ctx.channel.id == channel_id_list[0]:
                     ticket_channel = ctx.message.channel
 
-                    await ticket_channel.set_permissions(member, send_messages=False, read_messages=False, add_reactions=False, embed_links=False, attach_files=False, read_message_history=False, external_emojis=False)
+                    await ticket_channel.set_permissions(member, send_messages=False, read_messages=False, add_reactions=False,
+                                                         embed_links=False, attach_files=False, read_message_history=False, external_emojis=False)
 
                     ticket_embed = discord.Embed(
                         description=f"{member.mention} is verwijderd van dit ticket!",
@@ -212,7 +213,7 @@ class Ticket(commands.Cog):
 
     @commands.command()
     async def rename(self, ctx, rename_value=None):
-        mod_role = get(ctx.guild.roles, name="🔥│Sr. Moderator")
+        mod_role = get(ctx.guild.roles, name="🔥│Discord Staff")
         if mod_role in ctx.author.roles:
             if rename_value is not None:
                 db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
@@ -234,7 +235,7 @@ class Ticket(commands.Cog):
 
     @commands.command(name="force-rename")
     async def force_rename(self, ctx, rename_value=None):
-        mod_role = get(ctx.guild.roles, name="🔥│Sr. Moderator")
+        mod_role = get(ctx.guild.roles, name="🔥│Discord Staff")
         if mod_role in ctx.author.roles:
             if rename_value is not None:
                 db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
