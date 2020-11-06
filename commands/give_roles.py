@@ -9,7 +9,7 @@ class CommandsGiveRoles(commands.Cog):
 
     @commands.command()
     async def role(self, ctx, add_del=None, role=None):
-        role_channels = ["🎀│roles"]
+        role_channels = ["🎀│roles", "🤖│commands"]
         if str(ctx.channel) in role_channels:
             doorgaan = True
             setting = True
@@ -22,9 +22,11 @@ class CommandsGiveRoles(commands.Cog):
                 elif role == 2:
                     role = "Giveaways"
                 elif role == 3:
-                    role = "MineTopia"
-                elif role == 4:
                     role = "Minigames"
+                elif role == 4:
+                    role = "Economie"
+                elif role == 5:
+                    role = "DiscordBot"
                 else:
                     doorgaan = False
 
@@ -44,12 +46,6 @@ class CommandsGiveRoles(commands.Cog):
                             await ctx.author.remove_roles(giverole)
             except ValueError:
                 pass
-
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        role_channels = ["🎀│roles"]
-        if str(message.channel) in role_channels:
-            await message.delete()
 
 
 def setup(client):
