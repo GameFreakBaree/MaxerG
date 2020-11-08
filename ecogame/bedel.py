@@ -31,7 +31,7 @@ class EcoBedel(commands.Cog):
                                    "Elon", "Mark", "Witse", "Jorrit", "Bram"]
                 naam = random.choice(mogelijke_namen)
 
-                loon = randint(45, 120)
+                loon = randint(20, 80)
                 maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash + {loon}, netto = netto + {loon} WHERE user_id = {ctx.author.id}")
                 db_maxerg.commit()
 
