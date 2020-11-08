@@ -66,8 +66,7 @@ class HigherLower(commands.Cog):
                                 random_number = randint(min_getal, max_getal)
 
                                 maxergdb_cursor.execute(f"UPDATE maxerg_higherlower SET random_number = {random_number}")
-                                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET cash = cash + {random_money} WHERE user_id = {message.author.id}")
-                                maxergdb_cursor.execute(f"UPDATE maxerg_ecogame SET netto = netto + {random_money} WHERE user_id = {message.author.id}")
+                                maxergdb_cursor.execute(f"UPDATE maxerg_economie SET cash = cash + {random_money}, netto = netto + {random_money} WHERE user_id = {message.author.id}")
                                 db_maxerg.commit()
                     except ValueError:
                         await message.channel.purge(limit=1)
