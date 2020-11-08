@@ -61,7 +61,7 @@ async def ticket_create(self, bericht, member, db_maxerg, maxergdb_cursor, react
                                   "\n**3.** Bereidt je voor op een goed sollicitatie gesprek.")
     elif reactie == "3️⃣":
         await ticket_channel.send("Voltooi deze stappen om een kans te maken op een partnership:"
-                                  "\n\n**1.** Meer dan 75 MENSEN in je discord server hebben."
+                                  "\n\n**1.** Meer dan 150 MENSEN in je discord server hebben."
                                   "\n**2.** Stuur een PERMANENTE link van je discord server."
                                   "\n**3.** Vertel waarom je een partnership wilt aangaan.")
 
