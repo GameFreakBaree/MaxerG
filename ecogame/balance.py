@@ -21,15 +21,18 @@ class EcoBalance(commands.Cog):
 
             maxergdb_cursor.execute(f"SELECT * FROM maxerg_economie WHERE user_id = {member.id}")
             eco_data = maxergdb_cursor.fetchone()
-            cash = eco_data[1]
-            bank = eco_data[2]
-            netto_check = eco_data[3]
-            max_bank = eco_data[6]
 
-            if cash is None or bank is None or max_bank is None:
+            if eco_data is None:
                 cash = 0
                 bank = 0
                 max_bank = 5000
+                netto_check = 0
+            else:
+                cash = eco_data[1]
+                bank = eco_data[2]
+                netto_check = eco_data[3]
+                max_bank = eco_data[6]
+
             netto = cash + bank
 
             if netto_check != netto:
