@@ -17,14 +17,6 @@ class ReactOnMessages(commands.Cog):
             for emoji in ('👍', '👎'):
                 await message.add_reaction(emoji=f"{emoji}")
 
-        gtw_channels = ["🐍│woordslang"]
-        if str(message.channel) in gtw_channels:
-            global last_user
-            if last_user == message.author.id:
-                await message.delete()
-            else:
-                last_user = message.author.id
-
         role_channels = ["🎀│roles"]
         if str(message.channel) in role_channels:
             await message.delete()
