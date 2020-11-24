@@ -5,6 +5,7 @@ from discord.utils import get
 import datetime
 import mysql.connector
 from settings import host, user, password, database, embedcolor, footer, command_channels
+import asyncio
 
 
 class LevelingSystem(commands.Cog):
@@ -145,49 +146,145 @@ class LevelingSystem(commands.Cog):
             db_maxerg = mysql.connector.connect(host=host, database=database, user=user, passwd=password)
             maxergdb_cursor = db_maxerg.cursor()
 
-            pre_offset = page - 1
-            offset = pre_offset * 10
-            after_str = ""
-            eerste_volgnummer = offset
+            offset = (page - 1) * 10
+            leaderboard_zin = ""
+            volgnummer = offset
+
+            langste_regel = 0
 
             maxergdb_cursor.execute(f"SELECT * FROM maxerg_levels ORDER BY berichten DESC LIMIT 10 OFFSET {offset}")
             result = maxergdb_cursor.fetchall()
             for row in result:
-                eerste_volgnummer = eerste_volgnummer + 1
+                volgnummer = volgnummer + 1
+                volgnummer_prefix = f"{volgnummer}."
+                lengte_volgnummer_prefix = len(volgnummer_prefix)
+                aantal_spaties = 6 - lengte_volgnummer_prefix
+                spatie_prefix = " " * aantal_spaties
+                volgnummer_prefix = spatie_prefix + volgnummer_prefix
 
                 try:
-                    top_name = self.client.get_user(row[0])
-                    top_names = top_name.mention
+                    top_names = self.client.get_user(row[0])
                 except AttributeError:
-                    top_names = row[0]
+                    top_names = "Onbekend#0000"
 
-                top_aantal_berichten = row[2]
-                if top_aantal_berichten == 1:
-                    berichten = "bericht"
-                else:
-                    berichten = "berichten"
+                aantal_berichten = row[2]
+                lengte_aantal_berichten = len(str(aantal_berichten))
+                aantal_spaties = 9 - lengte_aantal_berichten
+                spatie_prefix = " " * aantal_spaties
+                aantal_berichten_prefix = spatie_prefix + str(aantal_berichten)
 
-                pre_str = f"**{eerste_volgnummer}.** {top_names} • **{top_aantal_berichten}** {berichten}\n"
-                after_str = after_str + pre_str
+                nieuwe_zin = f"{volgnummer_prefix} | {aantal_berichten_prefix} | {top_names}\n"
+                leaderboard_zin = leaderboard_zin + nieuwe_zin
 
-            if after_str == "":
-                after_str = "Geen data gevonden!"
+                if len(nieuwe_zin) > langste_regel:
+                    langste_regel = len(nieuwe_zin)
 
-            alle_berichten = 0
-            maxergdb_cursor.execute(f"SELECT berichten FROM maxerg_levels")
-            berichtjes = maxergdb_cursor.fetchall()
-            for row in berichtjes:
-                alle_berichten = alle_berichten + row[0]
+            if leaderboard_zin == "":
+                leaderboard_zin = "Geen data gevonden!"
+
+            maxergdb_cursor.execute(f"SELECT berichten FROM maxerg_levels WHERE berichten != 0")
+            max_pages_tuple = maxergdb_cursor.fetchall()
+            max_pages = len(max_pages_tuple)
+
+            if max_pages % 10 != 0:
+                max_pages = max_pages // 10 + 1
+            else:
+                max_pages = max_pages // 10
+
+            header = "Plaats | Berichten | Gebruiker"
+
+            if len(header) > langste_regel:
+                langste_regel = len(header)
+
+            seperator = "=" * langste_regel
 
             embed = discord.Embed(
-                title=f"Leaderboard [Pagina {page}]",
-                description=f"__Totaal Berichten:__ {alle_berichten}\n\n{after_str}",
-                color=embedcolor,
-                timestamp=datetime.datetime.utcnow()
+                title=f"Leaderboard Levels",
+                description=f"```md\n"
+                            f"{header}\n{seperator}\n{leaderboard_zin}"
+                            f"\n```",
+                color=embedcolor
             )
             embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-            embed.set_footer(text=footer)
-            await ctx.send(embed=embed)
+            embed.set_footer(text=f"{footer} | Pagina {page}/{max_pages}")
+            leaderboard_message = await ctx.send(embed=embed)
+
+            await leaderboard_message.add_reaction("◀️")
+            await leaderboard_message.add_reaction("▶️")
+
+            def check(reaction, member):
+                return member == ctx.author and str(reaction.emoji) in ["◀️", "▶️"]
+
+            while True:
+                try:
+                    reaction, member = await self.client.wait_for("reaction_add", timeout=30, check=check)
+
+                    if str(reaction.emoji) == "▶️" and page != max_pages:
+                        page += 1
+                        await leaderboard_message.remove_reaction(reaction, member)
+                        nieuwe_pagina = True
+                    elif str(reaction.emoji) == "◀️" and page > 1:
+                        page -= 1
+                        await leaderboard_message.remove_reaction(reaction, member)
+                        nieuwe_pagina = True
+                    else:
+                        await leaderboard_message.remove_reaction(reaction, member)
+                        nieuwe_pagina = False
+
+                    if nieuwe_pagina:
+                        offset = (page - 1) * 10
+                        leaderboard_zin = ""
+                        volgnummer = offset
+
+                        maxergdb_cursor.execute(f"SELECT * FROM maxerg_levels ORDER BY berichten DESC LIMIT 10 OFFSET {offset}")
+                        result = maxergdb_cursor.fetchall()
+                        for row in result:
+                            volgnummer = volgnummer + 1
+                            volgnummer_prefix = f"{volgnummer}."
+                            lengte_volgnummer_prefix = len(volgnummer_prefix)
+                            aantal_spaties = 6 - lengte_volgnummer_prefix
+                            spatie_prefix = " " * aantal_spaties
+                            volgnummer_prefix = spatie_prefix + volgnummer_prefix
+
+                            try:
+                                top_names = self.client.get_user(row[0])
+                            except AttributeError:
+                                top_names = "Onbekend#0000"
+
+                            aantal_berichten = row[2]
+                            lengte_aantal_berichten = len(str(aantal_berichten))
+                            aantal_spaties = 9 - lengte_aantal_berichten
+                            spatie_prefix = " " * aantal_spaties
+                            aantal_berichten_prefix = spatie_prefix + str(aantal_berichten)
+
+                            nieuwe_zin = f"{volgnummer_prefix} | {aantal_berichten_prefix} | {top_names}\n"
+                            leaderboard_zin = leaderboard_zin + nieuwe_zin
+
+                            if len(nieuwe_zin) > langste_regel:
+                                langste_regel = len(nieuwe_zin)
+
+                        if leaderboard_zin == "":
+                            leaderboard_zin = "Geen data gevonden!"
+
+                        if len(header) > langste_regel:
+                            langste_regel = len(header)
+
+                        seperator = "=" * langste_regel
+
+                        embed = discord.Embed(
+                            title=f"Leaderboard Levels",
+                            description=f"```md\n"
+                                        f"{header}\n{seperator}\n{leaderboard_zin}"
+                                        f"\n```",
+                            color=embedcolor
+                        )
+                        embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
+                        embed.set_footer(text=f"{footer} | Pagina {page}/{max_pages}")
+                        await leaderboard_message.edit(embed=embed)
+                except asyncio.TimeoutError:
+                    await leaderboard_message.clear_reaction("◀️")
+                    await leaderboard_message.clear_reaction("▶️")
+                    break
             db_maxerg.close()
 
 
