@@ -15,19 +15,27 @@ class EcoLeaderboard(commands.Cog):
     async def leaderboard(self, ctx, waarde=None, page=1):
         if str(ctx.channel) in ecogame_channels:
             doorgaan = True
-            prefix = currency
+            prefix = "Totaal Geld"
+            lengte_woord = len(prefix)
+
             if waarde is None:
                 index_waarde = 3
                 waarde = "netto"
             elif waarde.lower() == "cash":
                 index_waarde = 1
+                prefix = "Totaal Cash"
+                lengte_woord = len(prefix)
             elif waarde.lower() == "bank":
                 index_waarde = 2
+                prefix = "Totaal Bank"
+                lengte_woord = len(prefix)
             elif waarde.lower() == "netto":
                 index_waarde = 3
+                lengte_woord = len(prefix)
             elif waarde.lower() == "prestige":
                 index_waarde = 4
-                prefix = "Prestige: "
+                prefix = "Prestige"
+                lengte_woord = len(prefix)
             else:
                 index_waarde = 3
                 try:
@@ -40,28 +48,44 @@ class EcoLeaderboard(commands.Cog):
                 maxergdb_cursor = db_maxerg.cursor()
 
                 offset = (page - 1) * 10
-                after_str = ""
-                eerste_volgnummer = offset
+                volgnummer = offset
+                leaderboard_zin = ""
+                langste_regel = 0
 
                 maxergdb_cursor.execute(f"SELECT * FROM maxerg_economie ORDER BY {waarde.lower()} DESC LIMIT 10 OFFSET {offset}")
                 result = maxergdb_cursor.fetchall()
                 for row in result:
-                    eerste_volgnummer = eerste_volgnummer + 1
+                    volgnummer = volgnummer + 1
+                    volgnummer_prefix = f"{volgnummer}."
+                    lengte_volgnummer_prefix = len(volgnummer_prefix)
+                    aantal_spaties = 4 - lengte_volgnummer_prefix
+                    spatie_prefix = " " * aantal_spaties
+                    volgnummer_prefix = spatie_prefix + volgnummer_prefix
 
                     try:
-                        top_name = self.client.get_user(row[0])
-                        top_names = top_name.mention
+                        top_names = self.client.get_user(row[0])
                     except AttributeError:
-                        top_names = row[0]
+                        top_names = "Onbekend#0000"
 
                     geld = row[index_waarde]
+                    if index_waarde == 4:
+                        geld = f"{geld}"
+                    else:
+                        geld = f"{currency}{geld}"
+                    lengte_geld = len(str(geld))
+                    aantal_spaties = lengte_woord - lengte_geld
+                    spatie_prefix = " " * aantal_spaties
+                    geld_prefix = spatie_prefix + str(geld)
 
                     if geld != 0:
-                        pre_str = f"**{eerste_volgnummer}.** {top_names} • **{prefix}{geld}**\n"
-                        after_str = after_str + pre_str
+                        nieuwe_zin = f"{volgnummer_prefix} | {geld_prefix} | {top_names}\n"
+                        leaderboard_zin = leaderboard_zin + nieuwe_zin
 
-                if after_str == "":
-                    after_str = "Geen data gevonden!"
+                        if len(nieuwe_zin) > langste_regel:
+                            langste_regel = len(nieuwe_zin)
+
+                if leaderboard_zin == "":
+                    leaderboard_zin = "Geen data gevonden!"
 
                 netto_totaal = 0
                 maxergdb_cursor.execute(f"SELECT netto FROM maxerg_economie")
@@ -79,14 +103,21 @@ class EcoLeaderboard(commands.Cog):
                 else:
                     max_pages = max_pages // 10
 
+                header = f"Rank | {prefix} | Gebruiker"
+
+                if len(header) > langste_regel:
+                    langste_regel = len(header)
+
+                seperator = "=" * langste_regel
+
                 embed = discord.Embed(
-                    title=f"Leaderboard [Pagina {page}/{max_pages}]",
-                    description=f"__Totaal Geld:__ €{netto_totaal}\n\n{after_str}",
+                    title=f"Leaderboard",
+                    description=f"```md\n{header}\n{seperator}\n{leaderboard_zin}\n```",
                     color=embedcolor,
                     timestamp=datetime.datetime.utcnow()
                 )
                 embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-                embed.set_footer(text=footer)
+                embed.set_footer(text=f"{footer} | Pagina {page}/{max_pages}")
                 leaderboard_message = await ctx.send(embed=embed)
 
                 await leaderboard_message.add_reaction("◀️")
@@ -113,37 +144,57 @@ class EcoLeaderboard(commands.Cog):
 
                         if nieuwe_pagina:
                             offset = (page - 1) * 10
-                            after_str = ""
-                            eerste_volgnummer = offset
+                            leaderboard_zin = ""
+                            volgnummer = offset
 
                             maxergdb_cursor.execute(f"SELECT * FROM maxerg_economie ORDER BY {waarde.lower()} DESC LIMIT 10 OFFSET {offset}")
                             result = maxergdb_cursor.fetchall()
                             for row in result:
-                                eerste_volgnummer = eerste_volgnummer + 1
+                                volgnummer = volgnummer + 1
+                                volgnummer_prefix = f"{volgnummer}."
+                                lengte_volgnummer_prefix = len(volgnummer_prefix)
+                                aantal_spaties = 4 - lengte_volgnummer_prefix
+                                spatie_prefix = " " * aantal_spaties
+                                volgnummer_prefix = spatie_prefix + volgnummer_prefix
 
                                 try:
-                                    top_name = self.client.get_user(row[0])
-                                    top_names = top_name.mention
+                                    top_names = self.client.get_user(row[0])
                                 except AttributeError:
-                                    top_names = row[0]
+                                    top_names = "Onbekend#0000"
 
                                 geld = row[index_waarde]
+                                if index_waarde == 4:
+                                    geld = f"{geld}"
+                                else:
+                                    geld = f"{currency}{geld}"
+                                lengte_geld = len(str(geld))
+                                aantal_spaties = lengte_woord - lengte_geld
+                                spatie_prefix = " " * aantal_spaties
+                                geld_prefix = spatie_prefix + str(geld)
 
                                 if geld != 0:
-                                    pre_str = f"**{eerste_volgnummer}.** {top_names} • **{prefix}{geld}**\n"
-                                    after_str = after_str + pre_str
+                                    nieuwe_zin = f"{volgnummer_prefix} | {geld_prefix} | {top_names}\n"
+                                    leaderboard_zin = leaderboard_zin + nieuwe_zin
 
-                            if after_str == "":
-                                after_str = "Geen data gevonden!"
+                                    if len(nieuwe_zin) > langste_regel:
+                                        langste_regel = len(nieuwe_zin)
+
+                            if leaderboard_zin == "":
+                                leaderboard_zin = "Geen data gevonden!"
+
+                            if len(header) > langste_regel:
+                                langste_regel = len(header)
+
+                            seperator = "=" * langste_regel
 
                             embed = discord.Embed(
-                                title=f"Leaderboard [Pagina {page}/{max_pages}]",
-                                description=f"__Totaal Geld:__ €{netto_totaal}\n\n{after_str}",
+                                title=f"Leaderboard",
+                                description=f"```md\n{header}\n{seperator}\n{leaderboard_zin}\n```",
                                 color=embedcolor,
                                 timestamp=datetime.datetime.utcnow()
                             )
                             embed.set_author(name=self.client.user.display_name, icon_url=self.client.user.avatar_url)
-                            embed.set_footer(text=footer)
+                            embed.set_footer(text=f"{footer} | Pagina {page}/{max_pages}")
                             await leaderboard_message.edit(embed=embed)
                     except asyncio.TimeoutError:
                         await leaderboard_message.clear_reaction("◀️")
