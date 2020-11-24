@@ -5,7 +5,7 @@ last_user = 0
 last_word = ""
 
 
-class ReactOnMessages(commands.Cog):
+class Woordslang(commands.Cog):
 
     def __init__(self, client):
         self.client = client
@@ -20,14 +20,17 @@ class ReactOnMessages(commands.Cog):
             if last_user == message.author.id:
                 await message.delete()
             else:
-                if message.content[-1] in list(string.ascii_lowercase) or message.content[-1] in list(string.ascii_uppercase):
+                bericht = message.content
+                bericht = bericht.lower()
+
+                if bericht[-1] in list(string.ascii_lowercase):
                     if last_word == "":
                         last_user = message.author.id
-                        last_word = message.content
+                        last_word = bericht
                     else:
-                        if last_word[-1] == message.content[0]:
+                        if last_word[-1] == bericht[0]:
                             last_user = message.author.id
-                            last_word = message.content
+                            last_word = bericht
                         else:
                             await message.delete()
                 else:
@@ -35,4 +38,4 @@ class ReactOnMessages(commands.Cog):
 
 
 def setup(client):
-    client.add_cog(ReactOnMessages(client))
+    client.add_cog(Woordslang(client))
