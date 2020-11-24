@@ -20,18 +20,18 @@ class ReactOnMessages(commands.Cog):
             if last_user == message.author.id:
                 await message.delete()
             else:
-                if last_word == "":
-                    last_user = message.author.id
-                    last_word = message.content
-                else:
-                    if message.content[-1] in list(string.ascii_lowercase) or message.content[-1] in list(string.ascii_uppercase):
+                if message.content[-1] in list(string.ascii_lowercase) or message.content[-1] in list(string.ascii_uppercase):
+                    if last_word == "":
+                        last_user = message.author.id
+                        last_word = message.content
+                    else:
                         if last_word[-1] == message.content[0]:
                             last_user = message.author.id
                             last_word = message.content
                         else:
                             await message.delete()
-                    else:
-                        await message.delete()
+                else:
+                    await message.delete()
 
 
 def setup(client):
