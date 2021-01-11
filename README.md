@@ -1,3 +1,6 @@
+# Archived
+Het MaxerG project is helaas gestopt in 2021. De bot is nu vervangen door de [Gameout](https://github.com/GameFreakBaree/GameOut) bot. Oude code en releases blijven bestaan, ook zal dit de enige plek zijn waar je de code van de economie minigame kan zien omdat deze niet meer native zit in de [Gameout](https://github.com/GameFreakBaree/GameOut) bot.
+
 # MaxerG
 MaxerG is een Private bot alleen gemaakt voor de Discord Server MaxerG. Invite Link: [Klik Hier](https://discord.gg/69urKvj)
 
